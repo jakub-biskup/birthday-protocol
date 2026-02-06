@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 THE BIRTHDAY PROTOCOL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            z-index: 1000;
+        }
+        
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.98; }
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #00aa30;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .transmission-header {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            text-align: center;
+            padding: 15px;
+            border: 2px solid;
+            margin-bottom: 30px;
+        }
+        
+        .transmission-header.incoming {
+            color: #ff4444;
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            animation: alertPulse 2s infinite;
+        }
+        
+        .transmission-header.progress {
+            color: #00ffff;
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .transmission-header.complete {
+            color: #00ff41;
+            border-color: #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+            animation: successPulse 2s infinite;
+        }
+        
+        @keyframes alertPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.6); }
+        }
+        
+        @keyframes successPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 65, 0.6); }
+        }
+        
+        .terminal {
+            background: linear-gradient(180deg, #0d1a0d 0%, #0a0a0a 100%);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2), inset 0 0 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .terminal-header {
+            color: #00aa30;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #00aa30;
+        }
+        
+        .line {
+            margin: 15px 0;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        .line.visible {
+            opacity: 1;
+            transform: translateX(0);
+            transition: all 0.5s ease-out;
+        }
+        
+        .line.instant {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .prompt {
+            color: #00aa30;
+        }
+        
+        .highlight {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        
+        .warning {
+            color: #ffcc00;
+        }
+        
+        .error {
+            color: #ff4444;
+        }
+        
+        .success {
+            color: #00ff41;
+        }
+        
+        .agent-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            letter-spacing: 3px;
+        }
+        
+        .mission-box {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #00ffff;
+            border-left: 4px solid #00ffff;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .mission-box h3 {
+            color: #00ffff;
+            font-family: 'Orbitron', monospace;
+            margin-bottom: 15px;
+        }
+        
+        .stage-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .stage-list li {
+            padding: 12px 15px;
+            border-bottom: 1px dashed #333;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+        
+        .stage-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .stage-list li.completed {
+            background: rgba(0, 255, 65, 0.1);
+        }
+        
+        .stage-list li.current {
+            background: rgba(0, 255, 255, 0.1);
+            border-left: 3px solid #00ffff;
+        }
+        
+        .stage-list li.locked {
+            opacity: 0.5;
+        }
+        
+        .stage-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+        
+        .stage-icon.completed {
+            background: #00ff41;
+            color: #000;
+        }
+        
+        .stage-icon.current {
+            background: #00ffff;
+            color: #000;
+            animation: currentPulse 1.5s infinite;
+        }
+        
+        .stage-icon.locked {
+            background: #333;
+            color: #666;
+        }
+        
+        @keyframes currentPulse {
+            0%, 100% { box-shadow: 0 0 5px #00ffff; }
+            50% { box-shadow: 0 0 20px #00ffff; }
+        }
+        
+        .stage-info {
+            flex-grow: 1;
+        }
+        
+        .stage-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .stage-status {
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .stage-status.completed {
+            color: #00ff41;
+        }
+        
+        .stage-status.current {
+            color: #00ffff;
+        }
+        
+        .stage-code {
+            font-family: 'Orbitron', monospace;
+            color: #00ff41;
+            background: rgba(0, 255, 65, 0.2);
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .classified {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .warning-box {
+            background: rgba(255, 204, 0, 0.1);
+            border: 1px solid #ffcc00;
+            border-left: 4px solid #ffcc00;
+            padding: 15px 20px;
+            margin: 20px 0;
+            color: #ffcc00;
+        }
+        
+        .progress-bar-container {
+            margin: 20px 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: #1a1a1a;
+            border: 1px solid #00ff41;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #003300, #00ff41);
+            transition: width 1s ease-out;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        .final-code-box {
+            background: rgba(255, 204, 0, 0.1);
+            border: 2px solid #ffcc00;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .final-code-box h3 {
+            color: #ffcc00;
+            font-family: 'Orbitron', monospace;
+            margin-bottom: 15px;
+        }
+        
+        .final-code {
+            font-family: 'Orbitron', monospace;
+            font-size: 2em;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            letter-spacing: 5px;
+        }
+        
+        .start-btn {
+            display: block;
+            width: 100%;
+            padding: 20px 40px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .start-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .start-btn:hover {
+            background: linear-gradient(180deg, #004400 0%, #002200 100%);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            transform: translateY(-3px);
+            text-shadow: 0 0 10px #00ff41;
+        }
+        
+        .start-btn:active {
+            transform: translateY(0);
+        }
+        
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #444;
+            font-size: 0.8em;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background: #00ff41;
+            margin-left: 5px;
+            animation: cursorBlink 0.8s infinite;
+        }
+        
+        @keyframes cursorBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .birthday-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.1;
+            animation: floatEmoji 3s ease-in-out infinite;
+        }
+        
+        @keyframes floatEmoji {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+        }
+        
+        @keyframes confettiFall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Completion overlay */
+        .completion-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        .completion-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .completion-overlay.fade-out {
+            opacity: 0;
+        }
+        
+        .completion-content {
+            text-align: center;
+            transform: scale(0.5);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .completion-overlay.active .completion-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .completion-icon {
+            width: 120px;
+            height: 120px;
+            border: 4px solid #00ff41;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #00ff41;
+            margin: 0 auto 30px;
+            animation: completionPulse 1s ease-out;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.5);
+        }
+        
+        @keyframes completionPulse {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .completion-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2em;
+            color: #00ff41;
+            text-shadow: 0 0 30px #00ff41;
+            margin-bottom: 20px;
+            animation: glowText 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glowText {
+            from { text-shadow: 0 0 20px #00ff41; }
+            to { text-shadow: 0 0 40px #00ff41, 0 0 60px #00ff41; }
+        }
+        
+        .completion-code {
+            font-size: 1.2em;
+            color: #00ffff;
+        }
+        
+        .completion-code span {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            background: rgba(0, 255, 255, 0.2);
+            padding: 5px 20px;
+            border-radius: 5px;
+            margin-left: 10px;
+            text-shadow: 0 0 20px #00ffff;
+        }
+        
+        /* Progress animation */
+        .stage-list li {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        .stage-list li.animate-in {
+            animation: stageSlideIn 0.5s ease-out forwards;
+        }
+        
+        .stage-list li.instant-show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        @keyframes stageSlideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .stage-icon.animate-complete {
+            animation: checkmarkPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes checkmarkPop {
+            0% { transform: scale(0) rotate(-180deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .progress-fill.animate {
+            animation: progressGrow 1.5s ease-out forwards;
+        }
+        
+        @keyframes progressGrow {
+            from { width: var(--from-width, 0%); }
+            to { width: var(--to-width, 0%); }
+        }
+    </style>
+</head>
+<body class="crt-flicker">
+    <div class="scanlines"></div>
+    
+    <div class="container">
+        <div class="status-bar">
+            <span>SYSTEM: <span class="highlight">ACTIVE</span></span>
+            <span>AGENT: <span class="highlight">BOOOGRACZ</span> <button onclick="resetProgress()" style="background:#330000;color:#ff4444;border:1px solid #ff4444;padding:2px 8px;font-size:0.8em;cursor:pointer;margin-left:10px;font-family:inherit;">RESET</button></span>
+            <span>SIGNAL: <span class="blink">●</span> ONLINE</span>
+        </div>
+        
+        <div class="transmission-header" id="headerStatus">
+            ⚠️ INCOMING ENCRYPTED TRANSMISSION ⚠️
+        </div>
+        
+        <!-- Completion overlay -->
+        <div class="completion-overlay" id="completionOverlay">
+            <div class="completion-content">
+                <div class="completion-icon">✓</div>
+                <div class="completion-title" id="completionTitle">ETAP 1 UKOŃCZONY!</div>
+                <div class="completion-code">Zdobyty fragment: <span id="completionCode"></span></div>
+            </div>
+        </div>
+        
+        <div class="terminal">
+            <div class="terminal-header">
+                root@birthday-protocol:~$ ./mission_status.sh<span class="cursor"></span>
+            </div>
+            
+            <div id="introSection">
+                <!-- Intro content - shown only on first visit -->
+            </div>
+            
+            <div id="progressSection">
+                <!-- Progress content - shown after first stage -->
+            </div>
+            
+            <div class="mission-box">
+                <h3>📋 STATUS MISJI</h3>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-label">
+                        <span>Postęp misji:</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <ul class="stage-list" id="stageList">
+                    <!-- Dynamically generated -->
+                </ul>
+            </div>
+            
+            <div id="finalCodeSection" style="display: none;">
+                <!-- Shown when all stages complete -->
+            </div>
+            
+            <div class="warning-box" id="hintBox">
+                <strong>⚠️ UWAGA:</strong> Każdy etap wymaga rozwiązania zagadki. 
+                W razie trudności dostępne są <span class="highlight">HINTY</span> - ale prawdziwy agent radzi sobie sam!
+            </div>
+        </div>
+        
+        <button class="start-btn" id="startBtn" onclick="goToNextStage()">
+            🚀 ROZPOCZNIJ MISJĘ
+        </button>
+        
+        <div class="footer">
+            THE BIRTHDAY PROTOCOL v1.0 | 2.5 TUZINA LAT | 🎂
+        </div>
+    </div>
+    
+    <div class="birthday-hint">🎂</div>
+    
+    <script>
+        const STAGES = [
+            { id: 1, name: "Uszkodzona Transmisja", file: "verify1.html" },
+            { id: 2, name: "Ukryte w Obrazie", file: "verify2.html" },
+            { id: 3, name: "Archeolog Kodu", file: "verify3.html" },
+            { id: 4, name: "Warstwowe Szyfrowanie", file: "verify4.html" },
+            { id: 5, name: "Ostatni Protokół", file: "verify5.html" }
+        ];
+        
+        function getProgress() {
+            const saved = localStorage.getItem('birthdayProtocolProgress');
+            return saved ? JSON.parse(saved) : {};
+        }
+        
+        function saveProgress(stageId, code) {
+            const progress = getProgress();
+            progress[`stage${stageId}`] = code;
+            localStorage.setItem('birthdayProtocolProgress', JSON.stringify(progress));
+        }
+        
+        function getCompletedCount() {
+            const progress = getProgress();
+            return Object.values(progress).filter(v => v !== null).length;
+        }
+        
+        function getCurrentStage() {
+            const progress = getProgress();
+            for (let i = 1; i <= 5; i++) {
+                if (!progress[`stage${i}`]) return i;
+            }
+            return 6; // All complete
+        }
+        
+        function getFinalCode() {
+            const progress = getProgress();
+            let code = '';
+            for (let i = 1; i <= 5; i++) {
+                if (progress[`stage${i}`]) {
+                    code += progress[`stage${i}`];
+                }
+            }
+            return code;
+        }
+        
+        function renderPage() {
+            const progress = getProgress();
+            const completed = getCompletedCount();
+            const currentStage = getCurrentStage();
+            const isFirstVisit = completed === 0;
+            const isComplete = completed === 5;
+            
+            // Update header
+            const header = document.getElementById('headerStatus');
+            if (isComplete) {
+                header.className = 'transmission-header complete';
+                header.innerHTML = '✓ MISJA ZAKOŃCZONA SUKCESEM ✓';
+            } else if (isFirstVisit) {
+                header.className = 'transmission-header incoming';
+                header.innerHTML = '⚠️ INCOMING ENCRYPTED TRANSMISSION ⚠️';
+            } else {
+                header.className = 'transmission-header progress';
+                header.innerHTML = `📡 MISJA W TOKU - ETAP ${currentStage}/5`;
+            }
+            
+            // Update progress bar
+            const percent = (completed / 5) * 100;
+            document.getElementById('progressPercent').textContent = `${Math.round(percent)}%`;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+            
+            // Render intro or progress message
+            const introSection = document.getElementById('introSection');
+            const progressSection = document.getElementById('progressSection');
+            
+            if (isFirstVisit) {
+                introSection.innerHTML = `
+                    <div class="line" data-delay="500">
+                        <span class="prompt">[SYSTEM]</span> Inicjalizacja protokołu bezpieczeństwa...
+                    </div>
+                    <div class="line" data-delay="1200">
+                        <span class="prompt">[SYSTEM]</span> Weryfikacja odbiorcy... <span class="highlight">OK</span>
+                    </div>
+                    <div class="line" data-delay="2000">
+                        <span class="prompt">[DECRYPT]</span> Odszyfrowywanie wiadomości...
+                    </div>
+                    <div class="line" data-delay="3000">
+                        <span class="prompt">[SENDER]</span> <span class="classified">/// CLASSIFIED ///</span>
+                    </div>
+                    <div class="line" data-delay="3800">
+                        <span class="prompt">[TO]</span> Agent <span class="agent-name">BOOOGRACZ</span>
+                    </div>
+                    <div class="line" data-delay="4800">
+                        <span class="prompt">[SUBJECT]</span> <span class="warning">OPERACJA: BIRTHDAY PROTOCOL</span>
+                    </div>
+                    <div class="line" data-delay="5800">
+                        <span class="prompt">[MESSAGE]</span>
+                    </div>
+                    <div class="line" data-delay="6500" style="padding-left: 20px;">
+                        Agencie Booogracz,
+                    </div>
+                    <div class="line" data-delay="7200" style="padding-left: 20px;">
+                        Z okazji ukończenia <span class="highlight">30 cykli orbitalnych</span> wokół Słońca,
+                    </div>
+                    <div class="line" data-delay="8000" style="padding-left: 20px;">
+                        przygotowaliśmy dla Ciebie <span class="warning">specjalną misję</span>.
+                    </div>
+                    <div class="line" data-delay="9000" style="padding-left: 20px;">
+                        Twój prezent czeka na końcu... ale najpierw musisz go <span class="error">ZDOBYĆ</span>.
+                    </div>
+                    <div class="line" data-delay="10000" style="padding-left: 20px;">
+                        Powodzenia, Agencie. Będziesz go potrzebował.
+                    </div>
+                    <div class="line" data-delay="10800" style="padding-left: 20px;">
+                        <span class="classified">- Beeesqp</span>
+                    </div>
+                    <div class="line" data-delay="11500">
+                        <span class="prompt">[END TRANSMISSION]</span>
+                    </div>
+                `;
+                progressSection.innerHTML = '';
+                
+                // Animate lines
+                setTimeout(() => {
+                    document.querySelectorAll('#introSection .line').forEach(line => {
+                        const delay = parseInt(line.dataset.delay) || 0;
+                        setTimeout(() => line.classList.add('visible'), delay);
+                    });
+                }, 100);
+            } else if (isComplete) {
+                introSection.innerHTML = '';
+                progressSection.innerHTML = `
+                    <div class="line instant">
+                        <span class="prompt">[SYSTEM]</span> <span class="success">WSZYSTKIE ETAPY UKOŃCZONE!</span>
+                    </div>
+                    <div class="line instant">
+                        <span class="prompt">[STATUS]</span> Gratulacje, Agencie BOOOGRACZ!
+                    </div>
+                    <div class="line instant">
+                        Udowodniłeś, że jesteś godny swojego prezentu. 🎁
+                    </div>
+                `;
+            } else {
+                introSection.innerHTML = '';
+                progressSection.innerHTML = `
+                    <div class="line instant">
+                        <span class="prompt">[SYSTEM]</span> Witaj ponownie, Agencie.
+                    </div>
+                    <div class="line instant">
+                        <span class="prompt">[STATUS]</span> Ukończono <span class="highlight">${completed}/5</span> etapów.
+                    </div>
+                    <div class="line instant">
+                        <span class="prompt">[NEXT]</span> Czeka na Ciebie: <span class="warning">Etap ${currentStage}</span>
+                    </div>
+                `;
+            }
+            
+            // Render stage list
+            const stageList = document.getElementById('stageList');
+            stageList.innerHTML = STAGES.map(stage => {
+                const stageProgress = progress[`stage${stage.id}`];
+                const isCompleted = !!stageProgress;
+                const isCurrent = stage.id === currentStage;
+                const isLocked = stage.id > currentStage;
+                
+                let statusClass = '';
+                let iconClass = '';
+                let iconContent = '';
+                let statusText = '';
+                let codeHtml = '';
+                
+                if (isCompleted) {
+                    statusClass = 'completed';
+                    iconClass = 'completed';
+                    iconContent = '✓';
+                    statusText = 'UKOŃCZONY';
+                    codeHtml = `<span class="stage-code">${stageProgress}</span>`;
+                } else if (isCurrent) {
+                    statusClass = 'current';
+                    iconClass = 'current';
+                    iconContent = stage.id;
+                    statusText = '→ AKTYWNY';
+                } else {
+                    statusClass = 'locked';
+                    iconClass = 'locked';
+                    iconContent = '🔒';
+                    statusText = 'ZABLOKOWANY';
+                }
+                
+                return `
+                    <li class="${statusClass}">
+                        <span class="stage-icon ${iconClass}">${iconContent}</span>
+                        <div class="stage-info">
+                            <div class="stage-name">Etap ${stage.id}: ${isLocked ? '[ENCRYPTED]' : stage.name}</div>
+                            <div class="stage-status ${statusClass}">${statusText}</div>
+                        </div>
+                        ${codeHtml}
+                    </li>
+                `;
+            }).join('');
+            
+            // Show final code if complete
+            const finalCodeSection = document.getElementById('finalCodeSection');
+            if (isComplete) {
+                const finalCode = getFinalCode();
+                finalCodeSection.style.display = 'block';
+                finalCodeSection.innerHTML = `
+                    <div class="final-code-box">
+                        <h3>🎁 FINALNY KOD DOSTĘPU</h3>
+                        <div class="final-code">${finalCode}</div>
+                        <p style="margin-top: 15px; color: #00aa30;">
+                            Użyj tego kodu, aby odebrać swój prezent!
+                        </p>
+                    </div>
+                `;
+                document.getElementById('hintBox').style.display = 'none';
+                createConfetti();
+            } else {
+                finalCodeSection.style.display = 'none';
+            }
+            
+            // Update button
+            const startBtn = document.getElementById('startBtn');
+            if (isComplete) {
+                startBtn.style.display = 'none';
+            } else if (isFirstVisit) {
+                startBtn.textContent = '🚀 ROZPOCZNIJ MISJĘ';
+            } else {
+                startBtn.textContent = `→ PRZEJDŹ DO ETAPU ${currentStage}`;
+            }
+            
+            // Show button
+            setTimeout(() => {
+                startBtn.classList.add('visible');
+            }, isFirstVisit ? 13000 : 500);
+        }
+        
+        function goToNextStage() {
+            const currentStage = getCurrentStage();
+            if (currentStage <= 5) {
+                const stage = STAGES[currentStage - 1];
+                window.location.href = stage.file;
+            }
+        }
+        
+        function resetProgress() {
+            if (confirm('🗑️ Reset postępu?\n\nTo usunie cały Twój progress!')) {
+                localStorage.removeItem('birthdayProtocolProgress');
+                window.location.href = window.location.pathname;
+            }
+        }
+        
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.cssText = `
+                        position: fixed;
+                        width: ${5 + Math.random() * 10}px;
+                        height: ${5 + Math.random() * 10}px;
+                        background: ${['#00ff41', '#00ffff', '#ffcc00', '#ff6b6b', '#ff44ff'][Math.floor(Math.random() * 5)]};
+                        left: ${Math.random() * 100}vw;
+                        top: -20px;
+                        border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                        pointer-events: none;
+                        animation: confettiFall ${3 + Math.random() * 3}s linear forwards;
+                    `;
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 6000);
+                }, i * 50);
+            }
+        }
+        
+        // Check if returning from completed stage
+        function checkCompletion() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const completedStage = urlParams.get('completed');
+            
+            if (completedStage) {
+                const progress = getProgress();
+                const code = progress[`stage${completedStage}`];
+                
+                if (code) {
+                    // Show completion overlay
+                    const overlay = document.getElementById('completionOverlay');
+                    document.getElementById('completionTitle').textContent = `ETAP ${completedStage} UKOŃCZONY!`;
+                    document.getElementById('completionCode').textContent = code;
+                    
+                    overlay.classList.add('active');
+                    
+                    // Create mini confetti
+                    for (let i = 0; i < 30; i++) {
+                        setTimeout(() => {
+                            const confetti = document.createElement('div');
+                            confetti.style.cssText = `
+                                position: fixed;
+                                width: ${5 + Math.random() * 8}px;
+                                height: ${5 + Math.random() * 8}px;
+                                background: ${['#00ff41', '#00ffff', '#ffcc00'][Math.floor(Math.random() * 3)]};
+                                left: ${Math.random() * 100}vw;
+                                top: -20px;
+                                border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                                pointer-events: none;
+                                z-index: 3000;
+                                animation: confettiFall ${2 + Math.random() * 2}s linear forwards;
+                            `;
+                            document.body.appendChild(confetti);
+                            setTimeout(() => confetti.remove(), 4000);
+                        }, i * 40);
+                    }
+                    
+                    // Fade out and show main page
+                    setTimeout(() => {
+                        overlay.classList.add('fade-out');
+                        setTimeout(() => {
+                            overlay.classList.remove('active', 'fade-out');
+                            // Clean URL
+                            window.history.replaceState({}, '', window.location.pathname);
+                            // Animate stages
+                            animateStages(parseInt(completedStage));
+                        }, 500);
+                    }, 2500);
+                    
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function animateStages(justCompleted) {
+            const items = document.querySelectorAll('.stage-list li');
+            const progressFill = document.getElementById('progressFill');
+            const completed = getCompletedCount();
+            const prevCompleted = completed; // Already includes the new one
+            
+            // Animate progress bar
+            const fromPercent = ((prevCompleted - 1) / 5) * 100;
+            const toPercent = (prevCompleted / 5) * 100;
+            progressFill.style.setProperty('--from-width', `${fromPercent}%`);
+            progressFill.style.setProperty('--to-width', `${toPercent}%`);
+            progressFill.classList.add('animate');
+            
+            // Animate stages one by one
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('animate-in');
+                    
+                    // Pop effect for just completed stage
+                    if (index + 1 === justCompleted) {
+                        const icon = item.querySelector('.stage-icon');
+                        if (icon) icon.classList.add('animate-complete');
+                    }
+                }, index * 150);
+            });
+        }
+        
+        function renderPageInstant() {
+            // Same as renderPage but without completion check animations
+            const items = document.querySelectorAll('.stage-list li');
+            items.forEach(item => item.classList.add('instant-show'));
+        }
+        
+        // Easter egg in console
+        console.log('%c🎂 THE BIRTHDAY PROTOCOL 🎂', 'font-size: 20px; color: #00ff41; background: #000; padding: 10px;');
+        console.log('%cWszystkiego najlepszego, Booogracz!', 'font-size: 14px; color: #00ffff;');
+        
+        // Debug: reset progress (uncomment to test)
+        // localStorage.removeItem('birthdayProtocolProgress');
+        
+        // Initialize
+        renderPage();
+        
+        // Check for completion animation, otherwise show instant
+        if (!checkCompletion()) {
+            setTimeout(() => {
+                document.querySelectorAll('.stage-list li').forEach(item => {
+                    item.classList.add('instant-show');
+                });
+            }, 100);
+        }
+    </script>
+</body>
+</html>

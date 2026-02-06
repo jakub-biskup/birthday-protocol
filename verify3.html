@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎂 The Birthday Protocol - Stage 3</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            background: #0a0a0a;
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0a 50%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px);
+            color: #00ff41;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+            font-size: 2em;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #00aa30;
+            margin-bottom: 30px;
+        }
+        
+        .stage-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stage-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #00ff41;
+        }
+        
+        .stage-dot.completed {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        .stage-dot.active {
+            background: #00ffff;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px #00ffff; }
+            50% { opacity: 0.5; box-shadow: 0 0 20px #00ffff; }
+        }
+        
+        .puzzle-box {
+            background: linear-gradient(180deg, #0d1a0d 0%, #0a0a0a 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0,255,65,0.2), inset 0 0 60px rgba(0,0,0,0.5);
+        }
+        
+        .puzzle-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            color: #00ffff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .puzzle-description {
+            background: rgba(255,68,68,0.1);
+            border-left: 4px solid #ff4444;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            color: #ffaa99;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        /* Terminal styles */
+        .terminal {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .terminal-header {
+            background: linear-gradient(180deg, #333 0%, #222 100%);
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-btn.red { background: #ff5f56; }
+        .terminal-btn.yellow { background: #ffbd2e; }
+        .terminal-btn.green { background: #27ca40; }
+        
+        .terminal-title {
+            color: #888;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        
+        .terminal-body {
+            padding: 15px;
+            height: 350px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .terminal-body::-webkit-scrollbar-track {
+            background: #111;
+        }
+        
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        .terminal-line {
+            margin: 2px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .terminal-line.command {
+            color: #00ff41;
+        }
+        
+        .terminal-line.output {
+            color: #aaa;
+        }
+        
+        .terminal-line.error {
+            color: #ff4444;
+        }
+        
+        .terminal-line.highlight {
+            color: #ffcc00;
+        }
+        
+        .terminal-line.commit-hash {
+            color: #ffaa00;
+        }
+        
+        .terminal-line.commit-author {
+            color: #00aaff;
+        }
+        
+        .terminal-line.commit-date {
+            color: #888;
+        }
+        
+        .terminal-line.diff-add {
+            color: #00ff41;
+        }
+        
+        .terminal-line.diff-remove {
+            color: #ff4444;
+        }
+        
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .terminal-prompt {
+            color: #00aaff;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+        
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            flex-grow: 1;
+            outline: none;
+        }
+        
+        .input-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .input-section label {
+            color: #00aa30;
+        }
+        
+        input[type="text"]#answer {
+            background: #0a0a0a;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 15px;
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            width: 150px;
+            text-align: center;
+        }
+        
+        input[type="text"]#answer:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0,255,65,0.5);
+        }
+        
+        button {
+            background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 25px;
+            font-size: 1em;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: linear-gradient(180deg, #004400 0%, #002200 100%);
+            box-shadow: 0 0 20px rgba(0,255,65,0.4);
+        }
+        
+        .hint-btn {
+            background: linear-gradient(180deg, #332200 0%, #1a1100 100%);
+            border-color: #ffcc00;
+            color: #ffcc00;
+        }
+        
+        .hint {
+            display: none;
+            background: linear-gradient(90deg, rgba(255,204,0,0.1) 0%, transparent 100%);
+            border-left: 4px solid #ffcc00;
+            padding: 15px 20px;
+            margin: 15px 0;
+            color: #ffcc00;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .hints-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #333;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .result.error {
+            background: rgba(255,68,68,0.2);
+            border: 1px solid #ff4444;
+            color: #ff6b6b;
+        }
+        
+        .success-box {
+            display: none;
+            background: linear-gradient(180deg, #002200 0%, #001100 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .success-box h2 {
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .success-box .next-hint {
+            color: #aaa;
+            font-style: italic;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+        
+        .success-box a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(180deg, #004444 0%, #002222 100%);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            text-decoration: none;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.3s;
+        }
+        
+        .success-box a:hover {
+            box-shadow: 0 0 25px rgba(0,255,255,0.5);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #444;
+            font-size: 0.8em;
+        }
+        
+        .cmd-help {
+            background: rgba(0,255,255,0.1);
+            border: 1px solid #00ffff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+        }
+        
+        .cmd-help code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>THE BIRTHDAY PROTOCOL</h1>
+        <p class="subtitle">Witaj, Kaps. Twój prezent czeka... ale musisz go zdobyć.</p>
+        
+        <div class="stage-indicator">
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot active"></div>
+            <div class="stage-dot"></div>
+            <div class="stage-dot"></div>
+        </div>
+        
+        <div class="puzzle-box">
+            <div class="puzzle-title">
+                <span>📜</span> Stage 3/5: "Archeolog Kodu"
+            </div>
+            
+            <div class="puzzle-description">
+                <strong>📡 PRZECHWYCONA TRANSMISJA:</strong><br><br>
+                "Historia lubi się powtarzać, a programiści lubią zostawiać ślady. 
+                Pewne repozytorium zawiera wspomnienia... ale trzeba przekopać się przez przeszłość, 
+                żeby je odnaleźć. Każdy commit to warstwa historii."
+            </div>
+            
+            
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-btn red"></div>
+                    <div class="terminal-btn yellow"></div>
+                    <div class="terminal-btn green"></div>
+                    <span class="terminal-title" id="terminalTitle">~ — bash</span>
+                </div>
+                <div class="terminal-body" id="terminalBody">
+                    <div class="terminal-line output">Connection established to remote server.</div>
+                    <div class="terminal-line output">Repository available: <span style="color:#00ffff">git@github.com:bractwo/legacy.git</span></div>
+                    <div class="terminal-line output" style="margin-top:10px;color:#666">Type a command to begin...</div>
+                </div>
+                <div class="terminal-input-line" style="padding: 0 15px 15px 15px;">
+                    <span class="terminal-prompt">~ $</span>
+                    <input type="text" class="terminal-input" id="terminalInput" autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <label>Wprowadź kod: </label>
+            <input type="text" id="answer" maxlength="10" autocomplete="off" />
+            <button onclick="verify()">WERYFIKUJ</button>
+        </div>
+        
+        <div class="hints-section" id="hintsSection">
+            <button class="hint-btn" onclick="showHint(1)">💡 Hint 1</button>
+            <button class="hint-btn" onclick="showHint(2)" id="hint2btn" style="display:none">💡 Hint 2</button>
+            <button class="hint-btn" onclick="showHint(3)" id="hint3btn" style="display:none">💡 Hint 3</button>
+            <button class="hint-btn" onclick="showHint(4)" id="hint4btn" style="display:none">💡 Hint 4</button>
+            <button class="hint-btn" onclick="showHint(5)" id="hint5btn" style="display:none">💡 Hint 5</button>
+        </div>
+        
+        <div id="hint1" class="hint">
+            <strong>HINT 1:</strong> Każdy dobry archeolog zaczyna od historii. Zajrzyj w głąb commitów.
+        </div>
+        <div id="hint2" class="hint">
+            <strong>HINT 2:</strong> Programiści lubią zostawiać notatki w kodzie. Szczególnie w konfiguracji...
+        </div>
+        <div id="hint3" class="hint">
+            <strong>HINT 3:</strong> Tagi to kamienie milowe. Niektóre pomagają w "recovery".
+        </div>
+        <div id="hint4" class="hint">
+            <strong>HINT 4:</strong> Nie wszystkie branche są lokalne. Niektóre sekrety ukryto w archiwum...
+        </div>
+        <div id="hint5" class="hint">
+            <strong>HINT 5:</strong> 754 to nie liczba, to litery. W którym roku spłodzono pierwsze dziecię?
+        </div>
+        
+        <div id="result"></div>
+        
+        <div id="success" class="success-box">
+            <h2>✓ STAGE 3 UKOŃCZONY!</h2>
+            <p class="next-hint">
+                "Warstwy szyfrowania chronią najcenniejsze sekrety. Czasem trzeba obrać kilka..."
+            </p>
+            <a href="index.html?completed=3" id="nextLink">POWRÓT DO BAZY →</a>
+        </div>
+        
+        <div class="footer">
+            🎂 The Birthday Protocol v1.0 | Wszystkiego najlepszego, Booogracz! | 2.5 tuzina lat!
+        </div>
+    </div>
+
+    <script>
+        // Git simulation data
+        const commits = [
+            {
+                hash: "a3f8c91",
+                fullHash: "a3f8c91d4e2b7f6a8c9d0e1f2a3b4c5d6e7f8a9b",
+                author: "Beeesqp",
+                email: "beeesqp@bractwo.dev",
+                date: "2024-12-15 23:42:01 +0100",
+                message: "Final cleanup before deploy",
+                diff: `diff --git a/README.md b/README.md
+@@ -1,3 +1,4 @@
+ # Bractwo Legacy
+ 
+ Archive of memories.
++Ready for production.`
+            },
+            {
+                hash: "b7d2e45",
+                fullHash: "b7d2e45f8a1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e",
+                author: "Booogracz",
+                email: "booogracz@bractwo.dev",
+                date: "2024-12-14 18:33:22 +0100",
+                message: "Updated dependencies",
+                diff: `diff --git a/package.json b/package.json
+@@ -5,6 +5,6 @@
+   "dependencies": {
+-    "memories": "^1.0.0"
++    "memories": "^2.0.0"
+   }
+ }`
+            },
+            {
+                hash: "c4a9f82",
+                fullHash: "c4a9f82e1d3f5a7b9c2d4e6f8a0b2c4d6e8f0a2b",
+                author: "Beeesqp",
+                email: "beeesqp@bractwo.dev",
+                date: "2024-11-28 14:20:15 +0100",
+                message: "Added config loader module",
+                diff: `diff --git a/src/config.js b/src/config.js
+@@ -0,0 +1,8 @@
++// Config loader
++const CONFIG = {
++  debug: false,
++  version: "1.0.0"
++};
++
++// NOTE: check the tags for recovery options
++export default CONFIG;`
+            },
+            {
+                hash: "d1e5b73",
+                fullHash: "d1e5b73a9c2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a",
+                author: "Booogracz",
+                email: "booogracz@bractwo.dev",
+                date: "2024-11-20 09:15:44 +0100",
+                message: "Fixed memory loader bug",
+                diff: `diff --git a/src/loader.js b/src/loader.js
+@@ -12,7 +12,7 @@
+ function loadMemories() {
+-  return cache.get('memories');
++  return cache.getAll('memories');
+ }`
+            },
+            {
+                hash: "e8f2a19",
+                fullHash: "e8f2a19b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f",
+                author: "Beeesqp",
+                email: "beeesqp@bractwo.dev",
+                date: "2024-10-05 21:08:33 +0100",
+                message: "Refactored core module",
+                diff: `diff --git a/src/core.js b/src/core.js
+@@ -1,8 +1,10 @@
+-const core = require('./old-core');
++import { Core } from './new-core';
+ 
+-module.exports = core;
++export const core = new Core();`
+            },
+            {
+                hash: "f5c3d87",
+                fullHash: "f5c3d87e2a4c6e8a0c2e4a6c8e0a2c4e6a8c0e2a",
+                author: "Booogracz",
+                email: "booogracz@bractwo.dev",
+                date: "2024-09-18 16:45:00 +0100",
+                message: "Initial project structure",
+                diff: `diff --git a/README.md b/README.md
+@@ -0,0 +1,3 @@
++# Bractwo Legacy
++
++Archive of memories.`
+            }
+        ];
+        
+        // State control
+        let repoCloned = false;
+        let reflogUnlocked = false;
+        let awaitingPassword = false;
+        let pendingCommand = null;
+        let _0xsudoTime = 0;
+        const _0xsudoDelay = 2000;
+        
+        // Obfuscated password (XOR encoded)
+        const _0xpwd = [78,104,97,101,82,106,111,117,35].map((c,i)=>String.fromCharCode(c^(i%3))).join('');
+        
+        // Command history
+        const commandHistory = [];
+        let historyIndex = -1;
+        
+        // Hidden commit accessible via reflog (Base64 decoded at runtime)
+        const _0xb64 = atob('VkZOQklEMGdOelUwTGlCU2Iyc2daR1ZpYVhWMGRUOD0='); // double encoded
+        const hiddenCommit = {
+            hash: "x7b3f9a",
+            fullHash: "x7b3f9ad2e4c6a8f0b2d4e6a8c0e2f4a6b8d0c2e4",
+            author: "Beeesqp",
+            email: "beeesqp@bractwo.dev",
+            date: "2024-11-01 03:33:33 +0100",
+            message: "[REMOVED] tribute commit",
+            get diff() {
+                return `diff --git a/src/tribute.js b/src/tribute.js
+@@ -0,0 +1,12 @@
++/**
++ * ============================================
++ * THIS COMMIT WAS REMOVED FROM HISTORY
++ * But git remembers everything...
++ * ============================================
++ * 
++ * ${_0xb64}
++ */
++
++// For Father - legend of the team
++const tribute = { legacy: true };`;
+            }
+        };
+        
+        // Reflog entries
+        const reflogEntries = [
+            { hash: "a3f8c91", action: "commit", message: "Release v1.0 - production ready" },
+            { hash: "b7d2e45", action: "commit", message: "Enhanced memory caching system" },
+            { hash: "c4a9f82", action: "commit", message: "Fixed loader initialization bug" },
+            { hash: "x7b3f9a", action: "commit (amend)", message: "Tribute (removed - too personal)" },
+            { hash: "d1e5b73", action: "commit", message: "Linked external dependencies" },
+            { hash: "e8f2a19", action: "commit", message: "Organized folder structure" },
+            { hash: "f5c3d87", action: "commit", message: "Genesis - initial commit" }
+        ];
+        
+        // Tags
+        const tags = [
+            { name: "v1.0", hash: "a3f8c91" },
+            { name: "v0.5-beta", hash: "d1e5b73" },
+            { name: "recovery", hash: "c4a9f82", message: "Secrets sometimes hide in remote branches..." }
+        ];
+        
+        // Archive branch commit (password decoded at runtime)
+        const _0xarcPwd = [78,104,97,101,82,106,111,117,35].map((c,i)=>String.fromCharCode(c^(i%3))).join('');
+        const archiveCommit = {
+            hash: "9a8b7c6",
+            fullHash: "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b",
+            author: "Beeesqp",
+            email: "beeesqp@bractwo.dev",
+            date: "2024-10-20 02:14:00 +0100",
+            message: "Backup before cleanup",
+            get diff() {
+                return `diff --git a/RECOVERY.md b/RECOVERY.md
+@@ -0,0 +1,5 @@
++# Recovery Notes
++
++If you need to access removed commits:
++sudo git reflog
++password: ${_0xarcPwd}`;
+            }
+        };
+
+        const terminalBody = document.getElementById('terminalBody');
+        const terminalInput = document.getElementById('terminalInput');
+        
+        function addLine(text, className = 'output') {
+            const line = document.createElement('div');
+            line.className = `terminal-line ${className}`;
+            line.innerHTML = text;
+            terminalBody.appendChild(line);
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }
+        
+        function processCommand(cmd) {
+            const parts = cmd.trim().split(/\s+/);
+            const command = parts[0].toLowerCase();
+            
+            const promptPath = repoCloned ? '~/bractwo-legacy' : '~';
+            addLine(`<span style="color:#00aaff">${promptPath} $</span> ${cmd}`, 'command');
+            
+            if (command === 'git') {
+                const subcommand = parts[1];
+                
+                if (subcommand === 'clone') {
+                    if (repoCloned) {
+                        addLine('fatal: destination path \'bractwo-legacy\' already exists and is not an empty directory.', 'error');
+                        return;
+                    }
+                    animateClone();
+                    return;
+                }
+                
+                if (!repoCloned) {
+                    addLine('fatal: not a git repository (or any of the parent directories): .git', 'error');
+                    addLine('<span style="color:#666">hint: clone the repository first</span>');
+                    return;
+                }
+                
+                if (subcommand === 'log') {
+                    const target = parts[2];
+                    // Check if logging a remote branch
+                    if (target && (target.includes('archive/secrets') || target.includes('origin/archive'))) {
+                        addLine(`<span class="commit-hash">commit ${archiveCommit.fullHash}</span>`);
+                        addLine(`<span class="commit-author">Author: ${archiveCommit.author} &lt;${archiveCommit.email}&gt;</span>`);
+                        addLine(`<span class="commit-date">Date:   ${archiveCommit.date}</span>`);
+                        addLine('');
+                        addLine(`    ${archiveCommit.message}`);
+                        addLine('');
+                    } else if (target === '--oneline') {
+                        commits.forEach(c => {
+                            addLine(`<span class="commit-hash">${c.hash}</span> ${c.message}`);
+                        });
+                    } else if (target && !target.startsWith('-')) {
+                        // Unknown branch
+                        addLine(`fatal: ambiguous argument '${target}': unknown revision or path`, 'error');
+                    } else {
+                        commits.forEach(c => {
+                            addLine(`<span class="commit-hash">commit ${c.fullHash}</span>`);
+                            addLine(`<span class="commit-author">Author: ${c.author} &lt;${c.email}&gt;</span>`);
+                            addLine(`<span class="commit-date">Date:   ${c.date}</span>`);
+                            addLine('');
+                            addLine(`    ${c.message}`);
+                            addLine('');
+                        });
+                    }
+                } else if (subcommand === 'reflog') {
+                    addLine('fatal: permission denied - protected history requires elevated privileges', 'error');
+                    addLine('<span style="color:#666">hint: try with sudo</span>');
+                } else if (subcommand === 'show') {
+                    const hash = parts[2];
+                    if (!hash) {
+                        addLine('fatal: you must specify a commit', 'error');
+                        return;
+                    }
+                    // Check archive commit
+                    if (hash === archiveCommit.hash || hash === archiveCommit.fullHash || archiveCommit.fullHash.startsWith(hash)) {
+                        addLine(`<span class="commit-hash">commit ${archiveCommit.fullHash}</span>`);
+                        addLine(`<span class="commit-author">Author: ${archiveCommit.author} &lt;${archiveCommit.email}&gt;</span>`);
+                        addLine(`<span class="commit-date">Date:   ${archiveCommit.date}</span>`);
+                        addLine('');
+                        addLine(`    ${archiveCommit.message}`);
+                        addLine('');
+                        archiveCommit.diff.split('\n').forEach(line => {
+                            if (line.startsWith('+') && !line.startsWith('+++')) {
+                                addLine(line, 'diff-add');
+                            } else if (line.startsWith('-') && !line.startsWith('---')) {
+                                addLine(line, 'diff-remove');
+                            } else {
+                                addLine(line);
+                            }
+                        });
+                        return;
+                    }
+                    // Check hidden commit
+                    if (hash === hiddenCommit.hash || hash === hiddenCommit.fullHash || hiddenCommit.fullHash.startsWith(hash)) {
+                        addLine(`<span class="commit-hash">commit ${hiddenCommit.fullHash}</span>`);
+                        addLine(`<span class="commit-author">Author: ${hiddenCommit.author} &lt;${hiddenCommit.email}&gt;</span>`);
+                        addLine(`<span class="commit-date">Date:   ${hiddenCommit.date}</span>`);
+                        addLine('');
+                        addLine(`    ${hiddenCommit.message}`);
+                        addLine('');
+                        hiddenCommit.diff.split('\n').forEach(line => {
+                            if (line.startsWith('+') && !line.startsWith('+++')) {
+                                addLine(line, 'diff-add');
+                            } else if (line.startsWith('-') && !line.startsWith('---')) {
+                                addLine(line, 'diff-remove');
+                            } else {
+                                addLine(line);
+                            }
+                        });
+                        return;
+                    }
+                    // Check tags
+                    const tag = tags.find(t => t.name === hash);
+                    if (tag) {
+                        addLine(`tag ${tag.name}`);
+                        addLine(`Tagger: Beeesqp <beeesqp@bractwo.dev>`);
+                        addLine('');
+                        if (tag.message) {
+                            addLine(`<span style="color:#ffcc00">    ${tag.message}</span>`);
+                            addLine('');
+                        }
+                        const tagCommit = commits.find(c => c.hash === tag.hash);
+                        if (tagCommit) {
+                            addLine(`<span class="commit-hash">commit ${tagCommit.fullHash}</span>`);
+                            addLine(`<span class="commit-author">Author: ${tagCommit.author} &lt;${tagCommit.email}&gt;</span>`);
+                            addLine(`<span class="commit-date">Date:   ${tagCommit.date}</span>`);
+                            addLine('');
+                            addLine(`    ${tagCommit.message}`);
+                        }
+                        return;
+                    }
+                    // Check regular commits
+                    const commit = commits.find(c => c.hash === hash || c.fullHash === hash || c.fullHash.startsWith(hash));
+                    if (commit) {
+                        addLine(`<span class="commit-hash">commit ${commit.fullHash}</span>`);
+                        addLine(`<span class="commit-author">Author: ${commit.author} &lt;${commit.email}&gt;</span>`);
+                        addLine(`<span class="commit-date">Date:   ${commit.date}</span>`);
+                        addLine('');
+                        addLine(`    ${commit.message}`);
+                        addLine('');
+                        commit.diff.split('\n').forEach(line => {
+                            if (line.startsWith('+') && !line.startsWith('+++')) {
+                                addLine(line, 'diff-add');
+                            } else if (line.startsWith('-') && !line.startsWith('---')) {
+                                addLine(line, 'diff-remove');
+                            } else {
+                                addLine(line);
+                            }
+                        });
+                    } else {
+                        addLine(`fatal: bad revision '${hash}'`, 'error');
+                    }
+                } else if (subcommand === 'tag' || subcommand === 'tags') {
+                    tags.forEach(t => addLine(t.name));
+                } else if (subcommand === 'status') {
+                    addLine('On branch main');
+                    addLine('Your branch is up to date with \'origin/main\'.');
+                    addLine('');
+                    addLine('nothing to commit, working tree clean');
+                } else if (subcommand === 'branch') {
+                    if (parts[2] === '-a' || parts[2] === '--all') {
+                        addLine('* <span style="color:#00ff41">main</span>');
+                        addLine('  <span style="color:#ff6b6b">remotes/origin/main</span>');
+                        addLine('  <span style="color:#ff6b6b">remotes/origin/archive/secrets</span>');
+                    } else if (parts[2] === '-r') {
+                        addLine('  <span style="color:#ff6b6b">origin/main</span>');
+                        addLine('  <span style="color:#ff6b6b">origin/archive/secrets</span>');
+                    } else {
+                        addLine('* <span style="color:#00ff41">main</span>');
+                    }
+                } else {
+                    addLine(`git: '${subcommand}' is not a git command. See 'git --help'.`, 'error');
+                }
+            } else if (command === 'sudo') {
+                const sudoCmd = parts.slice(1).join(' ');
+                if (sudoCmd === 'git reflog') {
+                    addLine('[sudo] password for agent: ', 'output');
+                    awaitingPassword = true;
+                    pendingCommand = 'reflog';
+                    terminalInput.type = 'password';
+                } else {
+                    addLine(`sudo: ${parts[1] || 'command'}: command not found`, 'error');
+                }
+            } else if (command === 'echo') {
+                const text = parts.slice(1).join(' ');
+                addLine(text.replace(/["']/g, ''));
+            } else if (command === 'help') {
+                addLine('Available commands:', 'highlight');
+                addLine('  git log           - show commit history');
+                addLine('  git log --oneline - compact history');
+                addLine('  git reflog        - reference log (🔒)');
+                addLine('  git show <hash>   - show commit details');
+                addLine('  git tag           - list tags');
+                addLine('  git status        - show working tree status');
+                addLine('  clear             - clear terminal');
+                addLine('  help              - show this help');
+            } else if (command === 'clear') {
+                terminalBody.innerHTML = '';
+            } else if (command === 'ls') {
+                if (repoCloned) {
+                    addLine('<span style="color:#5599ff">src/</span>  README.md  package.json');
+                } else {
+                    addLine('<span style="color:#666">(empty directory)</span>');
+                }
+            } else if (command === 'pwd') {
+                addLine(repoCloned ? '/home/agent/bractwo-legacy' : '/home/agent');
+            } else if (command === 'cat') {
+                const file = parts[1];
+                if (!file) {
+                    addLine('cat: missing operand', 'error');
+                } else if (!repoCloned) {
+                    addLine(`cat: ${file}: No such file or directory`, 'error');
+                } else if (file === 'README.md') {
+                    addLine('# Bractwo Legacy');
+                    addLine('');
+                    addLine('Archive of memories.');
+                    addLine('Ready for production.');
+                } else if (file === 'package.json') {
+                    addLine('{');
+                    addLine('  "name": "bractwo-legacy",');
+                    addLine('  "version": "1.0.0",');
+                    addLine('  "dependencies": {');
+                    addLine('    "memories": "^2.0.0",');
+                    addLine('    "legacy-utils": "^0.5.0"');
+                    addLine('  }');
+                    addLine('}');
+                } else {
+                    addLine(`cat: ${file}: No such file or directory`, 'error');
+                }
+            } else if (command === 'cd') {
+                const dir = parts[1];
+                if (!dir || dir === '.' || dir === '~') {
+                    // stay
+                } else if (dir === 'src') {
+                    addLine('<span style="color:#666">(directory change simulated)</span>');
+                } else {
+                    addLine(`bash: cd: ${dir}: No such file or directory`, 'error');
+                }
+            } else if (command === '') {
+                // empty command
+            } else {
+                addLine(`bash: ${command}: command not found`, 'error');
+                addLine(`<span style="color:#666">Type 'help' for available commands.</span>`);
+            }
+        }
+        
+        terminalInput.addEventListener('keydown', function(e) {
+            // Arrow up - previous command
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistory.length > 0) {
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                    }
+                    terminalInput.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                }
+                return;
+            }
+            
+            // Arrow down - next command
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    terminalInput.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                } else if (historyIndex === 0) {
+                    historyIndex = -1;
+                    terminalInput.value = '';
+                }
+                return;
+            }
+            
+            // Enter - execute command
+            if (e.key === 'Enter') {
+                const cmd = terminalInput.value;
+                terminalInput.value = '';
+                historyIndex = -1;
+                
+                if (awaitingPassword) {
+                    // Password mode - don't save to history
+                    addLine('********', 'output');
+                    terminalInput.type = 'text';
+                    awaitingPassword = false;
+                    
+                    // Rate limiting for sudo
+                    const _now = Date.now();
+                    if (_now - _0xsudoTime < _0xsudoDelay) {
+                        const _wait = Math.ceil((_0xsudoDelay - (_now - _0xsudoTime)) / 1000);
+                        addLine(`sudo: too many attempts. Wait ${_wait}s...`, 'error');
+                        pendingCommand = null;
+                        return;
+                    }
+                    _0xsudoTime = _now;
+                    
+                    if (cmd === _0xpwd) {
+                        addLine('<span style="color:#00ff41">🔓 Access granted.</span>', 'highlight');
+                        addLine('');
+                        addLine('<span class="commit-hash">a3f8c91</span> HEAD@{0}: commit: Final cleanup before deploy');
+                        addLine('<span class="commit-hash">b7d2e45</span> HEAD@{1}: commit: Updated dependencies');
+                        addLine('<span class="commit-hash">c4a9f82</span> HEAD@{2}: commit: Added config loader module');
+                        addLine('<span class="commit-hash" style="color:#ff6b6b">x7b3f9a</span> HEAD@{3}: commit (amend): <span style="color:#ff6b6b">[REMOVED] tribute commit</span>');
+                        addLine('<span class="commit-hash">d1e5b73</span> HEAD@{4}: commit: Fixed memory loader bug');
+                        addLine('<span class="commit-hash">e8f2a19</span> HEAD@{5}: commit: Refactored core module');
+                        addLine('<span class="commit-hash">f5c3d87</span> HEAD@{6}: commit: Initial project structure');
+                        reflogUnlocked = true;
+                    } else {
+                        addLine('sudo: authentication failure', 'error');
+                    }
+                    pendingCommand = null;
+                } else {
+                    // Save to history (if not empty)
+                    if (cmd.trim()) {
+                        commandHistory.push(cmd);
+                    }
+                    processCommand(cmd);
+                }
+            }
+        });
+        
+        // Focus terminal on click (but not when selecting text)
+        document.querySelector('.terminal').addEventListener('mouseup', (e) => {
+            // Small delay to let selection complete
+            setTimeout(() => {
+                const selection = window.getSelection();
+                if (selection && selection.toString().length > 0) {
+                    return; // User selected text, don't focus
+                }
+                terminalInput.focus();
+            }, 10);
+        });
+
+        // Verification logic
+        // Verification hash (split + reversed)
+        const _0xh1='40978d45767c2eee5e5fbd837cc7bb25';
+        const _0xh2='241c9d61e2d791668a0e5ade36c0576e';
+        const _0xf4a2=[_0xh1.split('').reverse().join(''),_0xh2.split('').reverse().join('')];
+        let _0xa1=0,_0xb2=0,_0xt=0;
+        const _0xc3=_0xf4a2[0]+_0xf4a2[1];
+        const _0xrl=2000;
+        async function _0xh4sh(m){const e=new TextEncoder();const d=e.encode(m);const h=await crypto.subtle.digest('SHA-256',d);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+        async function verify(){const now=Date.now();if(now-_0xt<_0xrl){const wait=Math.ceil((_0xrl-(now-_0xt))/1000);_0xerr(`⏳ Poczekaj ${wait}s przed kolejną próbą...`);return;}_0xt=now;const v=document.getElementById('answer').value.trim();_0xa1++;document.getElementById('attempts')&&(document.getElementById('attempts').textContent=`Próby: ${_0xa1}`);if(!v){_0xerr("Wprowadź kod!");return;}const h=await _0xh4sh(v);if(h===_0xc3){document.getElementById('result').innerHTML='';document.getElementById('hintsSection').style.display='none';document.getElementById('success').style.display='block';document.getElementById('answer').disabled=true;document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});_0xparty();const _p=JSON.parse(localStorage.getItem('birthdayProtocolProgress')||'{}');_p.stage3=v;localStorage.setItem('birthdayProtocolProgress',JSON.stringify(_p));}else{_0xerr(`❌ Niepoprawnie. Spróbuj ponownie.`);if(_0xa1>=2&&_0xb2===0){setTimeout(()=>{_0xerr("❌ Niepoprawnie. Może skorzystaj z hintów? 💡");},100);}}}
+        function _0xerr(m){document.getElementById('result').innerHTML=`<div class="result error">${m}</div>`;}
+        function showHint(l){document.getElementById('hint'+l).style.display='block';_0xb2=l;if(l<5){document.getElementById('hint'+(l+1)+'btn').style.display='inline-block';}}
+        function _0xparty(){for(let i=0;i<50;i++){setTimeout(()=>{const c=document.createElement('div');c.style.cssText=`position:fixed;width:10px;height:10px;background:${['#00ff41','#00ffff','#ffcc00','#ff6b6b'][Math.floor(Math.random()*4)]};left:${Math.random()*100}vw;top:-10px;border-radius:${Math.random()>0.5?'50%':'0'};pointer-events:none;animation:confettiFall ${2+Math.random()*2}s linear forwards;`;document.body.appendChild(c);setTimeout(()=>c.remove(),4000);},i*30);}}
+        const _s=document.createElement('style');_s.textContent=`@keyframes confettiFall{to{transform:translateY(100vh) rotate(720deg);opacity:0;}}`;document.head.appendChild(_s);
+        document.getElementById('answer').addEventListener('keypress',function(e){if(e.key==='Enter')verify();});
+        document.getElementById('answer').addEventListener('input',function(){document.getElementById('result').innerHTML='';});
+        
+        // Clone animation
+        async function animateClone() {
+            terminalInput.disabled = true;
+            
+            const steps = [
+                { text: 'Cloning into \'bractwo-legacy\'...', delay: 300 },
+                { text: 'remote: Enumerating objects: 42, done.', delay: 800 },
+                { text: 'remote: Counting objects: <span id="countProgress">0</span>% (0/42)', delay: 200, animate: 'count' },
+                { text: 'remote: Compressing objects: 100% (28/28), done.', delay: 600 },
+                { text: 'remote: Total 42 (delta 15), reused 42 (delta 15), pack-reused 0', delay: 300 },
+                { text: 'Receiving objects: <span id="recvProgress">0</span>% (0/42)', delay: 200, animate: 'recv' },
+                { text: '<span style="color:#666">Receiving objects: 100% (42/42), 8.42 KiB | 2.81 MiB/s, done.</span>', delay: 100, replace: true },
+                { text: 'Resolving deltas: <span id="deltaProgress">0</span>% (0/15)', delay: 200, animate: 'delta' },
+                { text: '<span style="color:#666">Resolving deltas: 100% (15/15), done.</span>', delay: 100, replace: true },
+                { text: '', delay: 300 },
+                { text: '<span style="color:#00ff41">✓ Repository cloned successfully.</span>', delay: 0 }
+            ];
+            
+            for (const step of steps) {
+                await new Promise(r => setTimeout(r, step.delay));
+                
+                if (step.replace) {
+                    // Replace last line
+                    const lines = terminalBody.querySelectorAll('.terminal-line');
+                    if (lines.length > 0) {
+                        lines[lines.length - 1].innerHTML = step.text;
+                    }
+                } else {
+                    addLine(step.text);
+                }
+                
+                if (step.animate === 'count') {
+                    await animateProgress('countProgress', 42, 42, 30);
+                } else if (step.animate === 'recv') {
+                    await animateProgress('recvProgress', 42, 42, 25);
+                } else if (step.animate === 'delta') {
+                    await animateProgress('deltaProgress', 15, 15, 20);
+                }
+            }
+            
+            repoCloned = true;
+            document.querySelector('.terminal-prompt').textContent = '~/bractwo-legacy $';
+            document.getElementById('terminalTitle').textContent = 'bractwo-legacy — bash';
+            terminalInput.disabled = false;
+            terminalInput.focus();
+        }
+        
+        async function animateProgress(elementId, total, max, speed) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            const parent = el.parentElement;
+            for (let i = 0; i <= total; i++) {
+                const percent = Math.round((i / max) * 100);
+                if (parent) {
+                    const label = elementId.replace('Progress', '');
+                    const actionMap = { count: 'Counting objects', recv: 'Receiving objects', delta: 'Resolving deltas' };
+                    parent.innerHTML = `${actionMap[label] || label}: ${percent}% (${i}/${max})`;
+                }
+                await new Promise(r => setTimeout(r, speed));
+            }
+        }
+        
+        window.onload = () => {
+            terminalInput.focus();
+        };
+        
+        console.log("📜 Historia kryje sekrety. Wystarczy wiedzieć gdzie szukać.");
+    </script>
+</body>
+</html>

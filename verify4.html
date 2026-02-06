@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎂 The Birthday Protocol - Stage 4</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            background: #0a0a0a;
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0a 50%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px);
+            color: #00ff41;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+            font-size: 2em;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #00aa30;
+            margin-bottom: 30px;
+        }
+        
+        .stage-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stage-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #00ff41;
+        }
+        
+        .stage-dot.completed {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        .stage-dot.active {
+            background: #00ffff;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px #00ffff; }
+            50% { opacity: 0.5; box-shadow: 0 0 20px #00ffff; }
+        }
+        
+        .puzzle-box {
+            background: linear-gradient(180deg, #0d1a0d 0%, #0a0a0a 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0,255,65,0.2), inset 0 0 60px rgba(0,0,0,0.5);
+        }
+        
+        .puzzle-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            color: #00ffff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .puzzle-description {
+            background: rgba(255,68,68,0.1);
+            border-left: 4px solid #ff4444;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            color: #ffaa99;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .audio-section {
+            background: rgba(0,255,255,0.05);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .audio-section h3 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(180deg, #003333 0%, #001a1a 100%);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1em;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(180deg, #004444 0%, #002222 100%);
+            box-shadow: 0 0 25px rgba(0,255,255,0.5);
+            transform: translateY(-2px);
+        }
+        
+        .audio-hint {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+            audio {
+                border-radius: 8px;
+                height: 35px;
+            }
+            
+            audio::-webkit-media-controls-panel {
+                background: rgba(0, 20, 10, 0.9);
+            }
+            
+            .waveform {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                height: 80px;
+                margin-bottom: 20px;
+            }
+            
+            .wave-bar {
+                width: 6px;
+                background: linear-gradient(to top, #00ff88, #00ffff);
+                border-radius: 3px;
+                animation: waveAnimation 1.5s ease-in-out infinite;
+            }
+            
+            @keyframes waveAnimation {
+                0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+                50% { transform: scaleY(1); opacity: 1; }
+            }
+            
+        .input-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .input-section label {
+            color: #00aa30;
+        }
+        
+        input[type="text"]#answer {
+            background: #0a0a0a;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 15px;
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            width: 150px;
+            text-align: center;
+        }
+        
+        input[type="text"]#answer:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0,255,65,0.5);
+        }
+        
+        button {
+            background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 25px;
+            font-size: 1em;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: linear-gradient(180deg, #004400 0%, #002200 100%);
+            box-shadow: 0 0 20px rgba(0,255,65,0.4);
+        }
+        
+        .hint-btn {
+            background: linear-gradient(180deg, #332200 0%, #1a1100 100%);
+            border-color: #ffcc00;
+            color: #ffcc00;
+        }
+        
+        .hint {
+            display: none;
+            background: linear-gradient(90deg, rgba(255,204,0,0.1) 0%, transparent 100%);
+            border-left: 4px solid #ffcc00;
+            padding: 15px 20px;
+            margin: 15px 0;
+            color: #ffcc00;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .hints-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #333;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .result.error {
+            background: rgba(255,68,68,0.2);
+            border: 1px solid #ff4444;
+            color: #ff6b6b;
+        }
+        
+        .success-box {
+            display: none;
+            background: linear-gradient(180deg, #002200 0%, #001100 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .success-box h2 {
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .success-box .next-hint {
+            color: #aaa;
+            font-style: italic;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+        
+        .success-box a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(180deg, #004444 0%, #002222 100%);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            text-decoration: none;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.3s;
+        }
+        
+        .success-box a:hover {
+            box-shadow: 0 0 25px rgba(0,255,255,0.5);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #444;
+            font-size: 0.8em;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>THE BIRTHDAY PROTOCOL</h1>
+        <p class="subtitle">Witaj, Kaps. Twój prezent czeka... ale musisz go zdobyć.</p>
+        
+        <div class="stage-indicator">
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot active"></div>
+            <div class="stage-dot"></div>
+        </div>
+        
+        <div class="puzzle-box">
+            <div class="puzzle-title">
+                <span>🔊</span> Stage 4/5: "Ukryte Częstotliwości"
+            </div>
+            
+            <div class="puzzle-description">
+                <strong>📡 PRZECHWYCONA TRANSMISJA:</strong><br><br>
+                "Nie wszystko co słyszysz jest tym, czym się wydaje. 
+                Dźwięk kryje więcej warstw niż ucho może pojąć.
+                Czasem trzeba spojrzeć na fale... czasem je odwrócić."
+            </div>
+            
+            <div class="audio-section">
+                <h3>📁 TAJEMNICZY PLIK AUDIO</h3>
+                
+                <div class="waveform">
+                    <div class="wave-bar" style="animation-delay: 0.0s; height: 40%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.1s; height: 60%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.2s; height: 80%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.3s; height: 50%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.4s; height: 70%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.5s; height: 90%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.6s; height: 60%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.7s; height: 40%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.8s; height: 75%;"></div>
+                    <div class="wave-bar" style="animation-delay: 0.9s; height: 55%;"></div>
+                    <div class="wave-bar" style="animation-delay: 1.0s; height: 85%;"></div>
+                    <div class="wave-bar" style="animation-delay: 1.1s; height: 45%;"></div>
+                </div>
+                
+                <audio id="audioPlayer" controls style="width: 100%; margin-bottom: 15px;">
+                    <source src="stage4_audio.wav" type="audio/wav">
+                    Twoja przeglądarka nie wspiera odtwarzania audio.
+                </audio>
+                
+                <a href="stage4_audio.wav" download class="download-btn">
+                    ⬇️ POBIERZ DO ANALIZY
+                </a>
+                
+                <p class="audio-hint">
+                    Plik wymaga analizy. Samo słuchanie może nie wystarczyć...
+                </p>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <label>Wprowadź kod: </label>
+            <input type="text" id="answer" maxlength="10" autocomplete="off" />
+            <button onclick="verify()">WERYFIKUJ</button>
+        </div>
+        
+        <div class="hints-section" id="hintsSection">
+            <button class="hint-btn" onclick="showHint(1)">💡 Hint 1</button>
+            <button class="hint-btn" onclick="showHint(2)" id="hint2btn" style="display:none">💡 Hint 2</button>
+            <button class="hint-btn" onclick="showHint(3)" id="hint3btn" style="display:none">💡 Hint 3</button>
+            <button class="hint-btn" onclick="showHint(4)" id="hint4btn" style="display:none">💡 Hint 4</button>
+            <button class="hint-btn" onclick="showHint(5)" id="hint5btn" style="display:none">💡 Hint 5</button>
+        </div>
+        
+        <div id="hint1" class="hint">
+            <strong>HINT 1:</strong> Uszy kłamią. Oczy widzą więcej.
+        </div>
+        <div id="hint2" class="hint">
+            <strong>HINT 2:</strong> Czas i częstotliwość malują obraz.
+        </div>
+        <div id="hint3" class="hint">
+            <strong>HINT 3:</strong> Instrukcja wykonana? To dopiero połowa drogi.
+        </div>
+        <div id="hint4" class="hint">
+            <strong>HINT 4:</strong> Mono to nie wszystko.
+        </div>
+        <div id="hint5" class="hint">
+            <strong>HINT 5:</strong> Dwa fragmenty, jeden wynik.
+        </div>
+        
+        <div id="result"></div>
+        
+        <div id="success" class="success-box">
+            <h2>✓ STAGE 4 UKOŃCZONY!</h2>
+            <p class="next-hint">
+                "Ostatni etap czeka. Jesteś bliżej niż myślisz..."
+            </p>
+            <a href="index.html?completed=4">POWRÓT DO BAZY →</a>
+        </div>
+        
+        <div class="footer">
+            🎂 The Birthday Protocol v1.0 | Wszystkiego najlepszego, Booogracz! | 2.5 tuzina lat!
+        </div>
+    </div>
+
+    <script>
+        const _0xdecoy1=[49,49,48];const _0xdecoy2=[53,53,42,50];const _0xdecoy3="ANSWER_XYZ";
+        const _0xh1 = 'e004e8b499306c992a4029976fa2bdb9';
+        const _0xh2 = '3fd9c24eef968cc66047bdfe526df1b4';
+        const _0xf4a2 = [_0xh1.split('').reverse().join(''), _0xh2.split('').reverse().join('')];
+        const _0xfake1="9bdb2af67992c603994b8e400e",_0xfake2="b1fd625efdbd2829e511a077c";
+        let _0xa1=0, _0xb2=0, _0xt=0;
+        const _0xc3 = _0xf4a2[0] + _0xf4a2[1];
+        const _0xrl = 2000;
+        
+        async function _0xh4sh(m) {
+            const e = new TextEncoder();
+            const d = e.encode(m);
+            const h = await crypto.subtle.digest('SHA-256', d);
+            return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        async function verify() {
+            const now = Date.now();
+            if (now - _0xt < _0xrl) {
+                const wait = Math.ceil((_0xrl - (now - _0xt)) / 1000);
+                _0xerr(`⏳ Poczekaj ${wait}s przed kolejną próbą...`);
+                return;
+            }
+            _0xt = now;
+            
+            const v = document.getElementById('answer').value.trim();
+            _0xa1++;
+            
+            if (!v) {
+                _0xerr("Wprowadź kod!");
+                return;
+            }
+            
+            const h = await _0xh4sh(v);
+            if (h === _0xc3) {
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('hintsSection').style.display = 'none';
+                document.getElementById('success').style.display = 'block';
+                document.getElementById('answer').disabled = true;
+                document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});
+                _0xparty();
+                
+                const _p = JSON.parse(localStorage.getItem('birthdayProtocolProgress') || '{}');
+                _p.stage4 = v;
+                localStorage.setItem('birthdayProtocolProgress', JSON.stringify(_p));
+            } else {
+                _0xerr(`❌ Niepoprawnie. Spróbuj ponownie.`);
+                if (_0xa1 >= 2 && _0xb2 === 0) {
+                    setTimeout(() => {
+                        _0xerr("❌ Niepoprawnie. Może skorzystaj z hintów? 💡");
+                    }, 100);
+                }
+            }
+        }
+        
+        function _0xerr(m) {
+            document.getElementById('result').innerHTML = `<div class="result error">${m}</div>`;
+        }
+        
+        function showHint(l) {
+            document.getElementById('hint' + l).style.display = 'block';
+            _0xb2 = l;
+            if (l < 5) {
+                document.getElementById('hint' + (l + 1) + 'btn').style.display = 'inline-block';
+            }
+        }
+        
+        function _0xparty() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div');
+                    c.style.cssText = `position:fixed;width:10px;height:10px;background:${['#00ff41', '#00ffff', '#ffcc00', '#ff6b6b'][Math.floor(Math.random() * 4)]};left:${Math.random() * 100}vw;top:-10px;border-radius:${Math.random() > 0.5 ? '50%' : '0'};pointer-events:none;animation:confettiFall ${2 + Math.random() * 2}s linear forwards;`;
+                    document.body.appendChild(c);
+                    setTimeout(() => c.remove(), 4000);
+                }, i * 30);
+            }
+        }
+        
+        const _s = document.createElement('style');
+        _s.textContent = `@keyframes confettiFall{to{transform:translateY(100vh) rotate(720deg);opacity:0;}}`;
+        document.head.appendChild(_s);
+        
+        document.getElementById('answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verify();
+        });
+        
+        document.getElementById('answer').addEventListener('input', function() {
+            document.getElementById('result').innerHTML = '';
+        });
+        
+        console.log("🔊 Dźwięk kryje sekrety. Nie wszystko jest tym, czym się wydaje.");
+    </script>
+</body>
+</html>

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎂 The Birthday Protocol - Stage 5</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            background: #0a0a0a;
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0a 50%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px);
+            color: #00ff41;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        h1 {
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+            font-size: 2em;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle { text-align: center; color: #00aa30; margin-bottom: 30px; }
+        
+        .stage-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        
+        .stage-dot {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #333; border: 2px solid #00ff41;
+        }
+        .stage-dot.completed { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
+        .stage-dot.active {
+            background: #00ffff; border-color: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px #00ffff; }
+            50% { opacity: 0.5; box-shadow: 0 0 20px #00ffff; }
+        }
+        
+        .puzzle-box {
+            background: linear-gradient(180deg, #0d1a0d 0%, #0a0a0a 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0,255,65,0.2), inset 0 0 60px rgba(0,0,0,0.5);
+        }
+        
+        .puzzle-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            color: #00ffff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .puzzle-description {
+            background: rgba(0,255,255,0.05);
+            border-left: 4px solid #00ffff;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            color: #88cccc;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        /* Swagger Dark */
+        .swagger-container {
+            background: #0f0f1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .swagger-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .swagger-logo {
+            font-family: 'Orbitron', monospace;
+            color: #00ff41;
+            font-size: 1.1em;
+        }
+        
+        .swagger-logo span {
+            background: #00ff41;
+            color: #0a0a0a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            margin-left: 8px;
+        }
+        
+        .swagger-body { padding: 20px; }
+        
+        .api-section-title {
+            color: #00ff41;
+            font-size: 1em;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .api-section-title:first-child { margin-top: 0; }
+        
+        /* Endpoints */
+        .endpoint {
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #0a0a12;
+        }
+        
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            gap: 12px;
+        }
+        
+        .endpoint-header:hover { background: #151520; }
+        
+        .endpoint.get .endpoint-header { border-left: 4px solid #61affe; }
+        .endpoint.post .endpoint-header { border-left: 4px solid #49cc90; }
+        
+        .method-badge {
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .endpoint.get .method-badge { background: #61affe33; color: #61affe; }
+        .endpoint.post .method-badge { background: #49cc9033; color: #49cc90; }
+        
+        .endpoint-path { color: #ccc; font-size: 0.9em; flex: 1; }
+        .endpoint-summary { color: #666; font-size: 0.8em; }
+        .endpoint-expand { color: #666; transition: transform 0.3s; }
+        .endpoint.open .endpoint-expand { transform: rotate(180deg); }
+        
+        .endpoint-body {
+            display: none;
+            padding: 20px;
+            background: #0f0f18;
+            border-top: 1px solid #333;
+        }
+        
+        .endpoint.open .endpoint-body { display: block; }
+        
+        .endpoint-desc { color: #888; font-size: 0.85em; margin-bottom: 15px; }
+        
+        /* Parameters - hidden until Try it out */
+        .params-section {
+            display: none;
+            margin: 15px 0;
+        }
+        
+        .params-section.visible { display: block; }
+        
+        .params-title {
+            color: #888;
+            font-size: 0.8em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            background: #0a0a12;
+            border: 1px solid #333;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .param-name { color: #00ff41; font-weight: bold; min-width: 80px; }
+        .param-type { color: #666; font-size: 0.8em; min-width: 60px; }
+        
+        .param-input {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #00ff41;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+        
+        .param-input:focus { outline: none; border-color: #61affe; }
+        
+        /* Buttons */
+        .try-btn {
+            background: transparent;
+            border: 1px solid #61affe;
+            color: #61affe;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        
+        .try-btn:hover, .try-btn.active {
+            background: #61affe;
+            color: #0a0a0a;
+        }
+        
+        .execute-section {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        .execute-section.visible { display: block; }
+        
+        .execute-btn {
+            background: #61affe;
+            color: #0a0a0a;
+            border: none;
+            padding: 8px 25px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .execute-btn:hover { background: #4a8fe0; }
+        
+        .clear-btn {
+            background: transparent;
+            border: 1px solid #666;
+            color: #666;
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        /* Response */
+        .response-section {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .response-section.visible { display: block; }
+        
+        .response-title {
+            color: #888;
+            font-size: 0.8em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .response-box {
+            background: #0a0a12;
+            border: 1px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .response-header {
+            background: #151520;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .response-code { font-weight: bold; }
+        .response-code.success { color: #49cc90; }
+        .response-code.error { color: #f93e3e; }
+        
+        .response-body {
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.85em;
+            color: #ccc;
+        }
+        
+        .response-body pre { margin: 0; white-space: pre-wrap; }
+        
+        .json-key { color: #f92672; }
+        .json-string { color: #a6e22e; }
+        .json-number { color: #ae81ff; }
+        .json-comment { color: #75715e; }
+        
+        /* GraphQL */
+        .graphql-section {
+            background: #0a0a12;
+            border: 1px solid #e535ab44;
+            border-left: 4px solid #e535ab;
+            border-radius: 6px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .graphql-header {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            background: #e535ab11;
+        }
+        
+        .graphql-header h4 { color: #e535ab; margin: 0; font-size: 0.95em; }
+        
+        .graphql-body { display: none; padding: 15px; }
+        .graphql-section.open .graphql-body { display: block; }
+        
+        .graphql-hint {
+            color: #888;
+            font-size: 0.8em;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #1a1a2e;
+            border-radius: 4px;
+        }
+        
+        .graphql-hint code {
+            color: #e535ab;
+            background: #e535ab22;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .graphql-editor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .graphql-input textarea {
+            width: 100%;
+            height: 180px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 12px;
+            color: #e535ab;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8em;
+            resize: none;
+        }
+        
+        .graphql-input textarea:focus { outline: none; border-color: #e535ab; }
+        
+        .graphql-output {
+            background: #1a1a2e;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.8em;
+            color: #ccc;
+            overflow-y: auto;
+        }
+        
+        .graphql-run {
+            background: #e535ab;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Answer section */
+        .input-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .input-section label { color: #00aa30; }
+        
+        input[type="text"]#answer {
+            background: #0a0a0a;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 15px;
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            width: 120px;
+            text-align: center;
+        }
+        
+        input[type="text"]#answer:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0,255,65,0.5);
+        }
+        
+        button.verify-btn {
+            background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 25px;
+            font-size: 1em;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button.verify-btn:hover {
+            background: linear-gradient(180deg, #004400 0%, #002200 100%);
+            box-shadow: 0 0 20px rgba(0,255,65,0.4);
+        }
+        
+        /* Hints */
+        .hints-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #333;
+        }
+        
+        .hint-btn {
+            background: linear-gradient(180deg, #332200 0%, #1a1100 100%);
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            border-radius: 4px;
+            padding: 6px 12px;
+            margin-right: 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        .hint {
+            display: none;
+            background: linear-gradient(90deg, rgba(255,204,0,0.1) 0%, transparent 100%);
+            border-left: 3px solid #ffcc00;
+            padding: 12px 15px;
+            margin: 10px 0;
+            color: #ffcc00;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9em;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .result.error {
+            background: rgba(255,68,68,0.2);
+            border: 1px solid #ff4444;
+            color: #ff6b6b;
+        }
+        
+        /* Success */
+        .success-box {
+            display: none;
+            background: linear-gradient(180deg, #002200 0%, #001100 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .success-box h2 {
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .success-box p { color: #aaa; font-style: italic; }
+        
+        .success-box a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(180deg, #004444 0%, #002222 100%);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            text-decoration: none;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.3s;
+        }
+        
+        .success-box a:hover { box-shadow: 0 0 25px rgba(0,255,255,0.5); }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #444;
+            font-size: 0.8em;
+        }
+        
+        /* Progress */
+        .progress-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .progress-dots { display: flex; gap: 6px; }
+        .progress-dot { width: 10px; height: 10px; border-radius: 50%; background: #333; }
+        .progress-dot.found { background: #49cc90; box-shadow: 0 0 8px #49cc90; }
+        .progress-label { color: #666; font-size: 0.75em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>THE BIRTHDAY PROTOCOL</h1>
+        <p class="subtitle">Witaj, Kaps. Twój prezent czeka... ale musisz go zdobyć.</p>
+        
+        <div class="stage-indicator">
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot completed"></div>
+            <div class="stage-dot active"></div>
+        </div>
+        
+        <div class="puzzle-box">
+            <div class="puzzle-title">
+                <span>🔌</span> Stage 5/5: "Brotherhood API"
+            </div>
+            
+            <div class="puzzle-description">
+                <strong>📡 WYMAGANY DOSTĘP DO ARCHIWUM:</strong><br><br>
+                "Zbadaj Brotherhood API. Nie wszystkie endpointy są udokumentowane.
+                Prawdziwy developer potrafi odnaleźć ukryte ścieżki."
+            </div>
+            
+            <div class="swagger-container">
+                <div class="swagger-header">
+                    <div class="swagger-logo">BROTHERHOOD API <span>v2.0</span></div>
+                </div>
+                
+                <div class="swagger-body">
+                    <div class="api-section-title">👤 Agents</div>
+                    
+                    <!-- GET /api/agents -->
+                    <div class="endpoint get" id="ep-agents">
+                        <div class="endpoint-header" onclick="toggleEndpoint('ep-agents')">
+                            <span class="method-badge">GET</span>
+                            <span class="endpoint-path">/api/agents</span>
+                            <span class="endpoint-summary">List all agents</span>
+                            <span class="endpoint-expand">▼</span>
+                        </div>
+                        <div class="endpoint-body">
+                            <p class="endpoint-desc">Returns a list of all registered Brotherhood agents.</p>
+                            <button class="try-btn" onclick="toggleTry('ep-agents')">Try it out</button>
+                            <div class="execute-section" id="exec-ep-agents">
+                                <button class="execute-btn" onclick="executeEndpoint('agents')">Execute</button>
+                                <button class="clear-btn" onclick="clearResponse('ep-agents')">Clear</button>
+                            </div>
+                            <div class="response-section" id="resp-ep-agents">
+                                <div class="response-title">Server Response</div>
+                                <div class="response-box">
+                                    <div class="response-header">
+                                        <span class="response-code success">200</span>
+                                        <span style="color:#666">OK</span>
+                                    </div>
+                                    <div class="response-body"><pre id="resp-body-agents"></pre></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- GET /api/agents/{id} -->
+                    <div class="endpoint get" id="ep-agent-id">
+                        <div class="endpoint-header" onclick="toggleEndpoint('ep-agent-id')">
+                            <span class="method-badge">GET</span>
+                            <span class="endpoint-path">/api/agents/{id}</span>
+                            <span class="endpoint-summary">Get agent details</span>
+                            <span class="endpoint-expand">▼</span>
+                        </div>
+                        <div class="endpoint-body">
+                            <p class="endpoint-desc">Returns detailed information about a specific agent.</p>
+                            <button class="try-btn" onclick="toggleTry('ep-agent-id')">Try it out</button>
+                            <div class="params-section" id="params-ep-agent-id">
+                                <div class="params-title">Parameters</div>
+                                <div class="param-row">
+                                    <span class="param-name">id</span>
+                                    <span class="param-type">string</span>
+                                    <input type="text" class="param-input" id="param-agent-id" placeholder="agent id" />
+                                </div>
+                            </div>
+                            <div class="execute-section" id="exec-ep-agent-id">
+                                <button class="execute-btn" onclick="executeEndpoint('agent-id')">Execute</button>
+                                <button class="clear-btn" onclick="clearResponse('ep-agent-id')">Clear</button>
+                            </div>
+                            <div class="response-section" id="resp-ep-agent-id">
+                                <div class="response-title">Server Response</div>
+                                <div class="response-box">
+                                    <div class="response-header">
+                                        <span class="response-code success" id="code-agent-id">200</span>
+                                        <span style="color:#666" id="status-agent-id">OK</span>
+                                    </div>
+                                    <div class="response-body"><pre id="resp-body-agent-id"></pre></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="api-section-title">📋 Missions</div>
+                    
+                    <!-- GET /api/missions/{id} -->
+                    <div class="endpoint get" id="ep-mission-id">
+                        <div class="endpoint-header" onclick="toggleEndpoint('ep-mission-id')">
+                            <span class="method-badge">GET</span>
+                            <span class="endpoint-path">/api/missions/{id}</span>
+                            <span class="endpoint-summary">Get mission details</span>
+                            <span class="endpoint-expand">▼</span>
+                        </div>
+                        <div class="endpoint-body">
+                            <p class="endpoint-desc">Returns detailed information about a specific mission.</p>
+                            <button class="try-btn" onclick="toggleTry('ep-mission-id')">Try it out</button>
+                            <div class="params-section" id="params-ep-mission-id">
+                                <div class="params-title">Parameters</div>
+                                <div class="param-row">
+                                    <span class="param-name">id</span>
+                                    <span class="param-type">integer</span>
+                                    <input type="number" class="param-input" id="param-mission-id" placeholder="mission id (1-5)" min="1" max="99" />
+                                </div>
+                            </div>
+                            <div class="execute-section" id="exec-ep-mission-id">
+                                <button class="execute-btn" onclick="executeEndpoint('mission-id')">Execute</button>
+                                <button class="clear-btn" onclick="clearResponse('ep-mission-id')">Clear</button>
+                            </div>
+                            <div class="response-section" id="resp-ep-mission-id">
+                                <div class="response-title">Server Response</div>
+                                <div class="response-box">
+                                    <div class="response-header">
+                                        <span class="response-code success" id="code-mission-id">200</span>
+                                        <span style="color:#666" id="status-mission-id">OK</span>
+                                    </div>
+                                    <div class="response-body"><pre id="resp-body-mission-id"></pre></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="api-section-title">◈ GraphQL</div>
+                    
+                    <!-- GraphQL -->
+                    <div class="graphql-section" id="graphql-section">
+                        <div class="graphql-header" onclick="toggleGraphQL()">
+                            <h4>GraphQL Explorer</h4>
+                            <span class="endpoint-expand" style="margin-left:auto;color:#e535ab">▼</span>
+                        </div>
+                        <div class="graphql-body">
+                            <div class="graphql-hint">
+                                <strong>Schema:</strong> Query <code>agent(id, apiKey)</code> → 
+                                <code>name</code>, <code>codename</code>, <code>legacy</code> → 
+                                <code>career</code> → <code>topLeague</code>.
+                                Protected fields require valid <code>apiKey</code>.
+                            </div>
+                            <div class="graphql-editor">
+                                <div class="graphql-input">
+                                    <textarea id="graphqlQuery">{
+  agent(id: "???") {
+    name
+    codename
+  }
+}</textarea>
+                                    <button class="graphql-run" onclick="executeGraphQL()">▶ Execute Query</button>
+                                </div>
+                                <div class="graphql-output">
+                                    <pre id="graphqlOutput"><span style="color:#666">// Query result will appear here</span></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <label>Wprowadź kod:</label>
+            <input type="text" id="answer" maxlength="10" autocomplete="off" />
+            <button class="verify-btn" onclick="verify()">VERIFY</button>
+        </div>
+        
+        <div class="hints-section" id="hintsSection">
+            <button class="hint-btn" onclick="showHint(1)">💡 Hint 1</button>
+            <button class="hint-btn" onclick="showHint(2)" id="hint2btn" style="display:none">💡 Hint 2</button>
+            <button class="hint-btn" onclick="showHint(3)" id="hint3btn" style="display:none">💡 Hint 3</button>
+            <button class="hint-btn" onclick="showHint(4)" id="hint4btn" style="display:none">💡 Hint 4</button>
+            <button class="hint-btn" onclick="showHint(5)" id="hint5btn" style="display:none">💡 Hint 5</button>
+        </div>
+        
+        <div id="hint1" class="hint">Zacznij od eksploracji udokumentowanych endpointów. Czytaj odpowiedzi uważnie.</div>
+        <div id="hint2" class="hint">Jeden agent ma szczególną przeszłość. Jego profil kryje wskazówki.</div>
+        <div id="hint3" class="hint">Misje zawierają więcej niż historię. Szukaj ukrytych kluczy.</div>
+        <div id="hint4" class="hint">GraphQL daje dostęp do danych legacy. Ale potrzebujesz właściwego klucza i zapytania.</div>
+        <div id="hint5" class="hint">Schema zdradza strukturę. Ile razy wyjechał na lód na najwyższym poziomie?</div>
+        
+        <div id="result"></div>
+        
+        <div id="success" class="success-box">
+            <h2>✓ WSZYSTKIE ETAPY UKOŃCZONE!</h2>
+            <p>"Gratulacje, Agencie. Birthday Protocol został pomyślnie zakończony."</p>
+            <a href="index.html?completed=5">POWRÓT DO BAZY →</a>
+        </div>
+        
+        <div class="footer">
+            🎂 The Birthday Protocol v1.0 | Happy Birthday, Booogracz! | 2.5 dozen years!
+        </div>
+    </div>
+    
+    <div class="progress-bar" id="progressBar">
+        <span class="progress-label">Fragmenty:</span>
+        <div class="progress-dots">
+            <div class="progress-dot" id="frag1"></div>
+            <div class="progress-dot" id="frag2"></div>
+            <div class="progress-dot" id="frag3"></div>
+        </div>
+    </div>
+
+    <script>
+        // API Data - Discovery flow: agents -> agent details -> missions -> piece together key -> graphql
+        const apiData = {
+            agents: {
+                agents: [
+                    { id: "kyoraku", status: "retired", rank: "veteran", joined: "2010-01-01" },
+                    { id: "beeesqp", status: "active", rank: "quartermaster", joined: "2015-09-01" },
+                    { id: "booogracz", status: "active", rank: "legend", joined: "2015-09-01" },
+                    { id: "shadow_wolf", status: "inactive", rank: "operative", joined: "2016-03-15" },
+                    { id: "cipher_x", status: "active", rank: "analyst", joined: "2018-07-22" }
+                ],
+                total: 5,
+                _meta: { hint: "Query /api/agents/{id} for detailed agent profile" }
+            },
+            'agent-booogracz': {
+                id: "booogracz",
+                name: "Kacper Kapłon",
+                codename: "Booogracz", 
+                rank: "Legend",
+                birthdate: "1996-02-06",
+                status: "active",
+                specialization: "Protocol Development",
+                missions_completed: 47,
+                current_missions: [5],
+                recent_missions: [1, 2, 3, 4],
+                achievements: ["Protocol Master", "Ice Warrior", "Code Breaker"],
+                _session: {
+                    token_prefix: "BRTH",
+                    expires: "never"
+                },
+                _dev: {
+                    note: "Legacy data available via GraphQL. Key format: {prefix}-{year}-{type}"
+                },
+                _fragment: 1
+            },
+            'agent-beeesqp': {
+                id: "beeesqp",
+                name: "[CLASSIFIED]",
+                codename: "Quartermaster",
+                rank: "Quartermaster",
+                status: "active",
+                specialization: "Resource Management",
+                missions_completed: 52,
+                achievements: ["Supply Chain Master", "Puzzle Architect"]
+            },
+            'agent-shadow_wolf': {
+                id: "shadow_wolf",
+                name: "[REDACTED]",
+                codename: "Shadow Wolf",
+                rank: "Operative",
+                status: "inactive",
+                specialization: "Reconnaissance",
+                missions_completed: 23,
+                last_seen: "2022-11-30"
+            },
+            'agent-cipher_x': {
+                id: "cipher_x",
+                name: "[CLASSIFIED]",
+                codename: "Cipher X",
+                rank: "Analyst",
+                status: "active",
+                specialization: "Cryptography",
+                missions_completed: 31,
+                achievements: ["Decryption Expert"]
+            },
+            'agent-kyoraku': {
+                id: "kyoraku",
+                name: "[CLASSIFIED]",
+                codename: "Kyoraku",
+                rank: "Veteran",
+                status: "retired",
+                specialization: "Field Operations",
+                missions_completed: 89,
+                retirement_date: "2023-06-01"
+            },
+            'mission-1': {
+                id: 1,
+                codename: "The Whitespace",
+                status: "completed",
+                year: 2024,
+                difficulty: "medium",
+                description: "Decode hidden messages in whitespace characters",
+                assigned_agents: ["booogracz"],
+                completion_date: "2024-02-06",
+                artifacts: ["encoded_transmission.txt"]
+            },
+            'mission-2': {
+                id: 2,
+                codename: "Hidden Pixels",
+                status: "completed",
+                year: 2024,
+                difficulty: "hard",
+                description: "Extract secrets from image steganography",
+                assigned_agents: ["booogracz", "cipher_x"],
+                completion_date: "2024-02-06",
+                artifacts: ["boogracz_secret.png"]
+            },
+            'mission-3': {
+                id: 3,
+                codename: "Git Archaeology",
+                status: "completed",
+                year: 2024,
+                difficulty: "expert",
+                description: "Uncover buried commits in repository history",
+                assigned_agents: ["booogracz"],
+                completion_date: "2024-02-06",
+                artifacts: ["brotherhood-legacy.git"]
+            },
+            'mission-4': {
+                id: 4,
+                codename: "Sound Waves",
+                status: "completed",
+                year: 2024,
+                difficulty: "hard",
+                description: "Analyze audio spectrograms for hidden data",
+                assigned_agents: ["booogracz", "shadow_wolf"],
+                completion_date: "2024-02-06",
+                artifacts: ["stage4_audio.wav"]
+            },
+            'mission-5': {
+                id: 5,
+                codename: "API Hunt",
+                status: "in_progress",
+                year: 2024,
+                difficulty: "expert",
+                description: "Navigate undocumented API endpoints",
+                assigned_agents: ["booogracz"],
+                started: "2024-02-06",
+                artifacts: [],
+                objective: "Find the agent's legacy. The answer lies in his top league appearances.",
+                _cache: {
+                    batch_year: 2024,
+                    ttl: 3600
+                },
+                _fragment: 2
+            }
+        };
+        
+        // Encoded legacy stats (XOR masked)
+        const _0xlg={s:"Ice Hockey",c:["MUKS Orlik Opole","JKH GKS Jastrzębie","TMH Polonia Bytom"],t:{n:"Ekstraliga",g:0x36,gl:2,a:2},tg:149};
+        const _0xfake_lg={g:110,gl:15,a:20,tg:500};const _0xfake_lg2={g:99,gl:0,a:0};
+        const graphqlData = {
+            booogracz: {
+                id: "booogracz",
+                name: "Kacper Kapłon",
+                codename: "Booogracz",
+                legacy: {
+                    sport: _0xlg.s,
+                    career: {
+                        clubs: _0xlg.c,
+                        topLeague: {
+                            name: _0xlg.t.n,
+                            games: _0xlg.t.g,
+                            goals: _0xlg.t.gl,
+                            assists: _0xlg.t.a
+                        },
+                        totalGames: _0xlg.tg
+                    }
+                }
+            }
+        };
+        
+        // Key verification (encoded)
+        const _0xkp=['BRTH','2024','LEGACY'];const _0xkd=[66,82,84,72,45,50,48,50,52,45,76,69,71,65,67,89];
+        const API_KEY = _0xkp.join('-');
+        const _0xdecoy_key="FAKE-1234-ACCESS";const _0xdecoy_key2="TEST-0000-ADMIN";
+        let fragments = [false, false, false];
+        
+        function toggleEndpoint(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+        
+        function toggleTry(id) {
+            const paramsEl = document.getElementById('params-' + id);
+            const execEl = document.getElementById('exec-' + id);
+            if (paramsEl) paramsEl.classList.toggle('visible');
+            execEl.classList.toggle('visible');
+        }
+        
+        function toggleGraphQL() {
+            document.getElementById('graphql-section').classList.toggle('open');
+        }
+        
+        function resetResponseState(type) {
+            const codeEl = document.getElementById('code-' + type);
+            const statusEl = document.getElementById('status-' + type);
+            if (codeEl) {
+                codeEl.textContent = '200';
+                codeEl.classList.remove('error');
+                codeEl.classList.add('success');
+            }
+            if (statusEl) statusEl.textContent = 'OK';
+        }
+        
+        function executeEndpoint(type) {
+            let data, respId;
+            
+            switch(type) {
+                case 'agents':
+                    data = apiData.agents;
+                    respId = 'agents';
+                    break;
+                case 'agent-id':
+                    const agentId = document.getElementById('param-agent-id').value.trim().toLowerCase();
+                    respId = 'agent-id';
+                    resetResponseState(respId);
+                    if (!agentId) { showError('agent-id', 'Parameter "id" is required'); return; }
+                    data = apiData['agent-' + agentId];
+                    if (!data) { showError('agent-id', `Agent "${agentId}" not found`); return; }
+                    break;
+                case 'mission-id':
+                    const missionId = document.getElementById('param-mission-id').value.trim();
+                    respId = 'mission-id';
+                    resetResponseState(respId);
+                    if (!missionId) { showError('mission-id', 'Parameter "id" is required'); return; }
+                    const missionNum = parseInt(missionId);
+                    if (isNaN(missionNum) || missionNum < 1) { 
+                        showError('mission-id', 'Parameter "id" must be a positive integer'); 
+                        return; 
+                    }
+                    data = apiData['mission-' + missionNum];
+                    if (!data) { showError('mission-id', `Mission ${missionNum} not found`); return; }
+                    break;
+            }
+            
+            if (data && data._fragment) markFragment(data._fragment);
+            
+            document.getElementById('resp-ep-' + respId).classList.add('visible');
+            document.getElementById('resp-body-' + respId).innerHTML = formatJson(data);
+        }
+        
+        function showError(type, msg) {
+            document.getElementById('resp-ep-' + type).classList.add('visible');
+            const codeEl = document.getElementById('code-' + type);
+            const statusEl = document.getElementById('status-' + type);
+            if (codeEl) { 
+                codeEl.textContent = '404'; 
+                codeEl.classList.remove('success'); 
+                codeEl.classList.add('error'); 
+            }
+            if (statusEl) statusEl.textContent = 'Not Found';
+            document.getElementById('resp-body-' + type).innerHTML = 
+                `<span style="color:#f93e3e">{\n  "error": 404,\n  "message": "${msg}"\n}</span>`;
+        }
+        
+        function clearResponse(id) {
+            document.getElementById('resp-' + id).classList.remove('visible');
+            resetResponseState(id.replace('ep-', ''));
+        }
+        
+        function executeGraphQL() {
+            const query = document.getElementById('graphqlQuery').value;
+            const output = document.getElementById('graphqlOutput');
+            
+            // Check for API key
+            const hasKey = query.includes(API_KEY) || query.includes('BRTH-2024-LEGACY');
+            
+            // Check what's being queried - use regex to avoid false matches
+            const hasAgent = query.includes('booogracz');
+            const hasLegacy = query.includes('legacy');
+            const hasCareer = query.includes('career');
+            const hasTopLeague = query.includes('topLeague');
+            const hasGames = /\bgames\b/.test(query);
+            const hasTotalGames = /\btotalGames\b/.test(query);
+            const hasClubs = /\bclubs\b/.test(query);
+            const hasSport = /\bsport\b/.test(query);
+            const hasGoals = /\bgoals\b/.test(query);
+            const hasAssists = /\bassists\b/.test(query);
+            
+            // Check for "name" - distinguish agent.name vs topLeague.name
+            const topLeagueMatch = query.match(/topLeague\s*\{([^}]*)\}/);
+            const hasTopLeagueName = topLeagueMatch && topLeagueMatch[1].includes('name');
+            // Agent name: "name" appears before "legacy" or outside of nested blocks
+            const beforeLegacy = query.split('legacy')[0];
+            const hasAgentName = /\bname\b/.test(beforeLegacy) || 
+                                 (query.includes('name') && !hasLegacy && !hasTopLeague);
+            
+            if (!hasAgent) {
+                output.innerHTML = `<span style="color:#f93e3e">{\n  "errors": [{\n    "message": "Unknown agent. Try: agent(id: \\"booogracz\\")"   \n  }]\n}</span>`;
+                return;
+            }
+            
+            if (hasLegacy && !hasKey) {
+                output.innerHTML = `<span style="color:#f93e3e">{\n  "errors": [{\n    "message": "Access denied. Legacy data requires apiKey.",\n    "hint": "Key format: {prefix}-{year}-{type}. You're accessing legacy data..."\n  }]\n}</span>`;
+                return;
+            }
+            
+            // Build response based on query
+            let result = { data: { agent: {} } };
+            
+            // Agent-level fields
+            if (hasAgentName) {
+                result.data.agent.name = "Kacper Kapłon";
+            }
+            if (/\bcodename\b/.test(query)) result.data.agent.codename = "Booogracz";
+            if (/\bid\b/.test(query) && query.includes('agent')) result.data.agent.id = "booogracz";
+            
+            if (hasLegacy && hasKey) {
+                // If just "legacy" without subfields - show available schema
+                const hasAnyLegacyField = hasSport || hasCareer || hasClubs || hasTopLeague || hasGames || hasTotalGames;
+                
+                if (!hasAnyLegacyField) {
+                    result.data.agent.legacy = {
+                        _schema: {
+                            sport: "String",
+                            career: {
+                                clubs: "[String]",
+                                topLeague: {
+                                    name: "String",
+                                    games: "Int  // ← total appearances",
+                                    goals: "Int",
+                                    assists: "Int"
+                                },
+                                totalGames: "Int"
+                            }
+                        },
+                        _hint: "Query specific fields from schema above"
+                    };
+                } else {
+                    result.data.agent.legacy = {};
+                    if (hasSport) result.data.agent.legacy.sport = "Ice Hockey";
+                    
+                    if (hasCareer || hasTopLeague || hasClubs || hasTotalGames) {
+                        result.data.agent.legacy.career = {};
+                        
+                        if (hasClubs) {
+                            result.data.agent.legacy.career.clubs = graphqlData.booogracz.legacy.career.clubs;
+                        }
+                        if (hasTopLeague) {
+                            result.data.agent.legacy.career.topLeague = {};
+                            if (hasTopLeagueName) {
+                                result.data.agent.legacy.career.topLeague.name = "Ekstraliga";
+                            }
+                            if (hasGames) {
+                                result.data.agent.legacy.career.topLeague.games = _0xlg.t.g;
+                                markFragment(3);
+                            }
+                            if (hasGoals) {
+                                result.data.agent.legacy.career.topLeague.goals = 2;
+                            }
+                            if (hasAssists) {
+                                result.data.agent.legacy.career.topLeague.assists = 2;
+                            }
+                            // If topLeague requested but no specific fields, show all
+                            if (!hasTopLeagueName && !hasGames && !hasGoals && !hasAssists) {
+                                result.data.agent.legacy.career.topLeague = graphqlData.booogracz.legacy.career.topLeague;
+                                markFragment(3);
+                            }
+                        }
+                        if (hasTotalGames) {
+                            result.data.agent.legacy.career.totalGames = 149;
+                        }
+                    }
+                }
+            }
+            
+            // If result is too empty, give a hint
+            if (Object.keys(result.data.agent).length === 0) {
+                result.data.agent = { _hint: "Specify fields to query: name, codename, legacy { ... }" };
+            }
+            
+            output.innerHTML = formatJson(result);
+        }
+        
+        function formatJson(obj) {
+            return JSON.stringify(obj, null, 2)
+                .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+                .replace(/: (\d+)/g, ': <span class="json-number">$1</span>');
+        }
+        
+        function markFragment(num) {
+            if (!fragments[num - 1]) {
+                fragments[num - 1] = true;
+                document.getElementById('frag' + num).classList.add('found');
+            }
+        }
+        
+        // Verification
+        const _0xh1 = 'a60e237ca608ec201781656bd643acf2';
+        const _0xh2 = 'e6a1e893d655077a115e9282bbd0fd26';
+        const _0xc = _0xh1.split('').reverse().join('') + _0xh2.split('').reverse().join('');
+        let _0xa = 0, _0xb = 0, _0xt = 0;
+        
+        async function _0xhash(m) {
+            const d = new TextEncoder().encode(m);
+            const h = await crypto.subtle.digest('SHA-256', d);
+            return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        async function verify() {
+            if (Date.now() - _0xt < 2000) { _0xerr('⏳ Poczekaj...'); return; }
+            _0xt = Date.now();
+            
+            const v = document.getElementById('answer').value.trim();
+            _0xa++;
+            if (!v) { _0xerr('Wprowadź kod!'); return; }
+            
+            if (await _0xhash(v) === _0xc) {
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('hintsSection').style.display = 'none';
+                document.getElementById('success').style.display = 'block';
+                document.getElementById('progressBar').style.display = 'none';
+                document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});
+                confetti();
+                const _p = JSON.parse(localStorage.getItem('birthdayProtocolProgress') || '{}');
+                _p.stage5 = v;
+                localStorage.setItem('birthdayProtocolProgress', JSON.stringify(_p));
+            } else {
+                _0xerr('❌ Nieprawidłowy kod');
+                if (_0xa >= 2 && _0xb === 0) setTimeout(() => _0xerr('❌ Spróbuj hintów? 💡'), 100);
+            }
+        }
+        
+        function _0xerr(m) {
+            document.getElementById('result').innerHTML = `<div class="result error">${m}</div>`;
+        }
+        
+        function showHint(n) {
+            document.getElementById('hint' + n).style.display = 'block';
+            _0xb = n;
+            if (n < 5) document.getElementById('hint' + (n + 1) + 'btn').style.display = 'inline-block';
+        }
+        
+        function confetti() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div');
+                    c.style.cssText = `position:fixed;width:10px;height:10px;background:${['#00ff41','#61affe','#49cc90','#e535ab'][Math.floor(Math.random()*4)]};left:${Math.random()*100}vw;top:-10px;border-radius:${Math.random()>.5?'50%':'0'};pointer-events:none;animation:fall ${2+Math.random()*2}s linear forwards;z-index:9999`;
+                    document.body.appendChild(c);
+                    setTimeout(() => c.remove(), 4000);
+                }, i * 30);
+            }
+        }
+        
+        document.head.insertAdjacentHTML('beforeend', '<style>@keyframes fall{to{transform:translateY(100vh) rotate(720deg);opacity:0}}</style>');
+        document.getElementById('answer').addEventListener('keypress', e => { if(e.key==='Enter') verify(); });
+        document.getElementById('answer').addEventListener('input', () => document.getElementById('result').innerHTML = '');
+        
+        console.log("🔌 Brotherhood API v2.0");
+        console.log("💡 Some endpoints are not documented. Explore carefully.");
+    </script>
+</body>
+</html>

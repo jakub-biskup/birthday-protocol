@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎂 The Birthday Protocol - Stage 1</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            background: #0a0a0a;
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0a 50%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.03) 2px, rgba(0,255,65,0.03) 4px);
+            color: #00ff41;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5em;
+            text-align: center;
+            color: #00ff41;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41; }
+            to { text-shadow: 0 0 30px #00ff41, 0 0 60px #00ff41, 0 0 80px #00ff41; }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+        
+        .stage-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stage-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #00ff41;
+        }
+        
+        .stage-dot.completed {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        
+        .stage-dot.active {
+            background: #00ffff;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px #00ffff; }
+            50% { opacity: 0.5; box-shadow: 0 0 20px #00ffff; }
+        }
+        
+        .puzzle-box {
+            background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 0 30px rgba(255,68,68,0.2), inset 0 0 60px rgba(0,0,0,0.5);
+        }
+        
+        .puzzle-title {
+            font-family: 'Orbitron', monospace;
+            color: #ff4444;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: errorPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes errorPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .transmission-box {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .transmission-box::before {
+            content: "PRÓBA ODCZYTU...";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #555;
+            font-size: 0.9em;
+            animation: scanline 2s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        /* Ten element zawiera ukrytą wiadomość - spacje i taby */
+        .hidden-message {
+            font-family: monospace;
+            white-space: pre;
+            color: transparent;
+            user-select: all;
+            position: relative;
+            min-height: 20px;
+        }
+        
+        .error-info {
+            color: #ff6b6b;
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px dashed #ff4444;
+            background: rgba(255,68,68,0.1);
+            border-radius: 5px;
+        }
+        
+        .error-info code {
+            color: #ffcc00;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .meta-info {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+        
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .input-section label {
+            color: #aaa;
+        }
+        
+        input[type="text"] {
+            background: #000;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            color: #00ff41;
+            padding: 12px 15px;
+            font-size: 1.2em;
+            font-family: 'JetBrains Mono', monospace;
+            width: 120px;
+            text-align: center;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0,255,65,0.5);
+        }
+        
+        button {
+            background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 12px 25px;
+            font-size: 1em;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: linear-gradient(180deg, #004400 0%, #002200 100%);
+            box-shadow: 0 0 20px rgba(0,255,65,0.4);
+            transform: translateY(-2px);
+        }
+        
+        .hint-btn {
+            background: linear-gradient(180deg, #332200 0%, #1a1100 100%);
+            border-color: #ffcc00;
+            color: #ffcc00;
+        }
+        
+        .hint-btn:hover {
+            background: linear-gradient(180deg, #443300 0%, #221100 100%);
+            box-shadow: 0 0 20px rgba(255,204,0,0.4);
+        }
+        
+        .hint {
+            display: none;
+            background: linear-gradient(90deg, rgba(255,204,0,0.1) 0%, transparent 100%);
+            border-left: 4px solid #ffcc00;
+            padding: 15px 20px;
+            margin: 15px 0;
+            color: #ffcc00;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .hints-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #333;
+        }
+        
+        .hint strong {
+            color: #ffdd44;
+        }
+        
+        .hint a {
+            color: #00ffff;
+        }
+        
+        .hint code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ff6b6b;
+        }
+        
+        .result {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .result.error {
+            background: rgba(255,0,0,0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+        
+        .success-box {
+            display: none;
+            background: linear-gradient(180deg, #002200 0%, #001100 100%);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+            animation: successPulse 1s ease-in-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .success-box h2 {
+            color: #00ff41;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .success-box .fragment {
+            font-size: 2em;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin: 20px 0;
+        }
+        
+        .success-box .next-hint {
+            color: #aaa;
+            font-style: italic;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+        
+        .success-box a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(180deg, #004444 0%, #002222 100%);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            color: #00ffff;
+            text-decoration: none;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.3s;
+        }
+        
+        .success-box a:hover {
+            box-shadow: 0 0 25px rgba(0,255,255,0.5);
+            transform: translateY(-3px);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            color: #444;
+            font-size: 0.8em;
+        }
+        
+        .attempts-counter {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>THE BIRTHDAY PROTOCOL</h1>
+        <p class="subtitle">Witaj, Kaps. Twój prezent czeka... ale musisz go zdobyć.</p>
+        
+        <div class="stage-indicator">
+            <div class="stage-dot active"></div>
+            <div class="stage-dot"></div>
+            <div class="stage-dot"></div>
+            <div class="stage-dot"></div>
+            <div class="stage-dot"></div>
+        </div>
+        
+        <div class="puzzle-box">
+            <div class="puzzle-title">
+                <span>⚠️</span> Stage 1/5: "Uszkodzona Transmisja"
+            </div>
+            
+            <div class="transmission-box">
+                <pre class="hidden-message" id="hiddenData"></pre>
+            </div>
+            
+            <div class="error-info">
+                <strong>⛔ BŁĄD TRANSMISJI</strong><br><br>
+                Odebrano pakiet danych, ale zawartość wydaje się pusta lub uszkodzona.<br>
+                <span class="meta-info">
+                    Rozmiar: <code>168 bajtów</code> | 
+                    Typ: <code>UNKNOWN</code> | 
+                    Kodowanie: <code>???</code>
+                </span>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <label>Wprowadź kod: </label>
+            <input type="text" id="answer" maxlength="10" autocomplete="off" />
+            <button onclick="verify()">WERYFIKUJ</button>
+        </div>
+        
+        <div class="hints-section" id="hintsSection">
+            <button class="hint-btn" onclick="showHint(1)">💡 Hint 1</button>
+            <button class="hint-btn" onclick="showHint(2)" id="hint2btn" style="display:none">💡 Hint 2</button>
+            <button class="hint-btn" onclick="showHint(3)" id="hint3btn" style="display:none">💡 Hint 3</button>
+            <button class="hint-btn" onclick="showHint(4)" id="hint4btn" style="display:none">💡 Hint 4</button>
+            <button class="hint-btn" onclick="showHint(5)" id="hint5btn" style="display:none">💡 Hint 5</button>
+        </div>
+        
+        <div id="hint1" class="hint">
+            <strong>HINT 1:</strong> "Nic tu nie ma" - powiedział ktoś, kto nie sprawdził źródła.
+        </div>
+        <div id="hint2" class="hint">
+            <strong>HINT 2:</strong> Co widzisz, gdy nic nie widzisz? Zaznacz i się przekonaj.
+        </div>
+        <div id="hint3" class="hint">
+            <strong>HINT 3:</strong> Każdy bit ma swoje miejsce.
+        </div>
+        <div id="hint4" class="hint">
+            <strong>HINT 4:</strong> W próżni kryją się dwaj szpiedzy. Identyczni dla oka, różni dla kodu.
+        </div>
+        <div id="hint5" class="hint">
+            <strong>HINT 5:</strong> Trzy cyfry. Ta sama dziupla co zawsze.
+        </div>
+        
+        <div id="result"></div>
+        
+        <div id="success" class="success-box">
+            <h2>✓ STAGE 1 UKOŃCZONY!</h2>
+            <p class="next-hint">
+                "Obraz mówi więcej niż tysiąc słów, ale czasem trzeba zajrzeć głębiej niż piksel..."
+            </p>
+            <a href="index.html?completed=1" id="nextLink">POWRÓT DO BAZY →</a>
+        </div>
+        
+        <div class="attempts-counter" id="attempts"></div>
+        
+        <div class="footer">
+            🎂 The Birthday Protocol v1.0 | Wszystkiego najlepszego, Booogracz! | 2.5 tuzina lat!
+        </div>
+    </div>
+
+    <script>
+        const _0xf4a2=['84a5092e4a5b6fe968fd523fb2fc917d','bffae44105f82b6b94c8ed5b9a800223'];
+        const _0xdecoy1=[83,69,75,82,69,84,32,75,69,89,32,49,50,51];
+        const _0xdecoy2=[80,65,83,83,87,79,82,68,58,32,52,50,48];
+        const _0x3d7c=[107,125,126,105,107,120,104,10,99,102,122,127,99,112,110,10,120,111,103,127,100];
+        const _0xdecoy3=[65,78,83,87,69,82,58,32,57,57,57];
+        const _0xk3y=0x2a;
+        let _0xa1=0,_0xb2=0,_0xt=0;
+        const _0xc3=_0xf4a2[0]+_0xf4a2[1];
+        const _0xrl=2000;
+        function _0xd3c(a,k){return a.slice().reverse().map(x=>x^k);}
+        async function _0xh4sh(m){const e=new TextEncoder();const d=e.encode(m);const h=await crypto.subtle.digest('SHA-256',d);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+        async function verify(){const now=Date.now();if(now-_0xt<_0xrl){const wait=Math.ceil((_0xrl-(now-_0xt))/1000);_0xerr(`⏳ Poczekaj ${wait}s przed kolejną próbą...`);return;}_0xt=now;const v=document.getElementById('answer').value.trim();_0xa1++;document.getElementById('attempts').textContent=`Próby: ${_0xa1}`;if(!v){_0xerr("Wprowadź kod!");return;}const h=await _0xh4sh(v);if(h===_0xc3){document.getElementById('result').innerHTML='';document.getElementById('hintsSection').style.display='none';document.getElementById('success').style.display='block';document.getElementById('answer').disabled=true;document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});_0xparty();const _p=JSON.parse(localStorage.getItem('birthdayProtocolProgress')||'{}');_p.stage1=v;localStorage.setItem('birthdayProtocolProgress',JSON.stringify(_p));}else{_0xerr(`❌ Niepoprawnie. Spróbuj ponownie.`);if(_0xa1>=2&&_0xb2===0){setTimeout(()=>{_0xerr("❌ Niepoprawnie. Może skorzystaj z hintów? 💡");},100);}}}
+        function _0xerr(m){document.getElementById('result').innerHTML=`<div class="result error">${m}</div>`;}
+        function showHint(l){document.getElementById('hint'+l).style.display='block';_0xb2=l;if(l<5){document.getElementById('hint'+(l+1)+'btn').style.display='inline-block';}}
+        function _0xparty(){for(let i=0;i<50;i++){setTimeout(()=>{const c=document.createElement('div');c.style.cssText=`position:fixed;width:10px;height:10px;background:${['#00ff41','#00ffff','#ffcc00','#ff6b6b'][Math.floor(Math.random()*4)]};left:${Math.random()*100}vw;top:-10px;border-radius:${Math.random()>0.5?'50%':'0'};pointer-events:none;animation:confettiFall ${2+Math.random()*2}s linear forwards;`;document.body.appendChild(c);setTimeout(()=>c.remove(),4000);},i*30);}}
+        const _s=document.createElement('style');_s.textContent=`@keyframes confettiFall{to{transform:translateY(100vh) rotate(720deg);opacity:0;}}`;document.head.appendChild(_s);
+        document.getElementById('answer').addEventListener('keypress',function(e){if(e.key==='Enter')verify();});
+        document.getElementById('answer').addEventListener('input',function(){document.getElementById('result').innerHTML='';});
+        window.onload=()=>{document.getElementById('answer').focus();const _m=_0xd3c(_0x3d7c,_0xk3y);let _r='';for(let i=0;i<_m.length;i++){let _b=_m[i].toString(2).padStart(8,'0');for(let j=0;j<_b.length;j++){_r+=_b[j]==='0'?'&#32;':'&#9;';}}document.getElementById('hiddenData').innerHTML=_r;};
+        console.log("🔍 Hmm, ktoś tu zagląda do konsoli? Sprytnie! Ale to nie tutaj znajdziesz odpowiedź...");
+        console.log("💡 Tip: Przyjrzyj się dokładnie 'pustej' transmisji w DOM...");
+    </script>
+</body>
+</html>

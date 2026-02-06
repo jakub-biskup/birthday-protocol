@@ -219,6 +219,30 @@
             50% { box-shadow: 0 0 25px rgba(0,255,65,0.6); }
         }
         
+        .timer-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .timer-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .timer {
+            color: #00ff41;
+            font-size: 1.5em;
+            font-family: 'Orbitron', monospace;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+        
+        .timer-container.hidden {
+            display: none;
+        }
+        
         .video-hint {
             color: #666;
             font-family: 'JetBrains Mono', monospace;
@@ -271,6 +295,10 @@
                 allowfullscreen>
             </iframe>
         </div>
+        <div class="timer-container" id="timerContainer">
+            <span class="timer-label">Następny krok za:</span>
+            <span class="timer" id="timer">0:15</span>
+        </div>
         <p class="video-hint" id="videoHint">Oglądaj uważnie...</p>
         <button class="real-btn" id="realBtn" onclick="goToRealReward()">
             🎁 OK (ale już tak na serio)
@@ -318,12 +346,24 @@
             document.getElementById('videoContainer').classList.add('active');
             document.body.classList.add('video-mode');
             
-            // Show real button after video duration (approx 3:33 = 213 seconds)
-            // But let's show it after 10 seconds for testing, or when video ends
-            setTimeout(() => {
-                document.getElementById('realBtn').style.display = 'block';
-                document.getElementById('videoHint').textContent = 'A teraz... prawdziwa nagroda czeka!';
-            }, 15000); // Show after 15 seconds
+            // Countdown timer
+            let timeLeft = 15;
+            const timerEl = document.getElementById('timer');
+            const timerContainer = document.getElementById('timerContainer');
+            
+            const countdown = setInterval(() => {
+                timeLeft--;
+                const mins = Math.floor(timeLeft / 60);
+                const secs = timeLeft % 60;
+                timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    timerContainer.classList.add('hidden');
+                    document.getElementById('realBtn').style.display = 'block';
+                    document.getElementById('videoHint').textContent = 'A teraz... prawdziwa nagroda czeka!';
+                }
+            }, 1000);
         }
         
         function goToRealReward() {

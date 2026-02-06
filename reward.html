@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎉 GRATULACJE!!!</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
         
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
@@ -18,7 +18,13 @@
             align-items: center;
             justify-content: center;
             font-family: 'Comic Neue', 'Comic Sans MS', cursive;
-            overflow: hidden;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        body.video-mode {
+            background: #0a0a0a;
+            animation: none;
         }
         
         @keyframes gradientShift {
@@ -156,6 +162,69 @@
             0% { opacity: 0.3; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1.2); }
         }
+        
+        /* Video section */
+        .video-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .video-container.active {
+            display: flex;
+        }
+        
+        .video-wrapper {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16/9;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,255,65,0.3);
+            border: 2px solid #00ff41;
+        }
+        
+        .video-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .real-btn {
+            display: none;
+            margin-top: 30px;
+            padding: 20px 50px;
+            background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: realBtnPulse 2s ease-in-out infinite;
+        }
+        
+        .real-btn:hover {
+            background: linear-gradient(180deg, #004400 0%, #002200 100%);
+            box-shadow: 0 0 30px rgba(0,255,65,0.5);
+            transform: scale(1.05);
+        }
+        
+        @keyframes realBtnPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0,255,65,0.3); }
+            50% { box-shadow: 0 0 25px rgba(0,255,65,0.6); }
+        }
+        
+        .video-hint {
+            color: #666;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -163,7 +232,8 @@
         <source src="gratulacje-uzytkowniku.mp3" type="audio/mpeg">
     </audio>
     
-    <div class="popup">
+    <!-- Phase 1: Fake popup -->
+    <div class="popup" id="fakePopup">
         <span class="star">⭐</span>
         <span class="star">⭐</span>
         <span class="star">⭐</span>
@@ -188,10 +258,26 @@
             Kliknij OK aby odebrać swój ekskluzywny prezent urodzinowy!
         </p>
         
-        <button class="ok-btn" onclick="claimPrize()">OK</button>
+        <button class="ok-btn" onclick="showVideo()">OK</button>
     </div>
     
-    <div class="disclaimer">* To nie jest prawdziwy scam, spokojnie 😉</div>
+    <!-- Phase 2: Video -->
+    <div class="video-container" id="videoContainer">
+        <div class="video-wrapper">
+            <iframe 
+                id="ytPlayer"
+                src="https://www.youtube.com/embed/GnvPHkJT0Q4?enablejsapi=1&autoplay=1" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+        <p class="video-hint" id="videoHint">Oglądaj uważnie...</p>
+        <button class="real-btn" id="realBtn" onclick="goToRealReward()">
+            🎁 OK (ale już tak na serio)
+        </button>
+    </div>
+    
+    <div class="disclaimer" id="disclaimer">* To nie jest prawdziwy scam, spokojnie 😉</div>
     
     <script>
         // Confetti on load
@@ -226,9 +312,22 @@
         `;
         document.head.appendChild(style);
         
-        function claimPrize() {
-            // Redirect to Rick Roll (or appropriate video)
-            window.location.href = 'https://www.youtube.com/watch?v=GnvPHkJT0Q4';
+        function showVideo() {
+            document.getElementById('fakePopup').style.display = 'none';
+            document.getElementById('disclaimer').style.display = 'none';
+            document.getElementById('videoContainer').classList.add('active');
+            document.body.classList.add('video-mode');
+            
+            // Show real button after video duration (approx 3:33 = 213 seconds)
+            // But let's show it after 10 seconds for testing, or when video ends
+            setTimeout(() => {
+                document.getElementById('realBtn').style.display = 'block';
+                document.getElementById('videoHint').textContent = 'A teraz... prawdziwa nagroda czeka!';
+            }, 15000); // Show after 15 seconds
+        }
+        
+        function goToRealReward() {
+            window.location.href = 'final-reward.html';
         }
         
         // Try to play audio (may be blocked by browser)

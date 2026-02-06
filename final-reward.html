@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 Prawdziwa Nagroda - Birthday Protocol</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            color: #00ff41;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 65, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 204, 0, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00ff41;
+            text-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(0, 255, 65, 0.3); }
+            to { text-shadow: 0 0 40px rgba(0, 255, 65, 0.7); }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #00aa30;
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+        
+        .message-box {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            border-left: 4px solid #00ff41;
+            padding: 25px;
+            margin-bottom: 40px;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .message-box p {
+            color: #ccc;
+            line-height: 1.8;
+        }
+        
+        .message-box strong {
+            color: #00ff41;
+        }
+        
+        .vouchers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .voucher-card {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 30, 20, 0.8) 100%);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .voucher-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 255, 255, 0.2);
+        }
+        
+        .voucher-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+        
+        .voucher-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .voucher-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            color: #00ffff;
+            margin-bottom: 10px;
+        }
+        
+        .voucher-desc {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(180deg, #003333 0%, #001a1a 100%);
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(180deg, #004444 0%, #002a2a 100%);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .footer-message {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #222;
+        }
+        
+        .footer-message .signature {
+            color: #ffcc00;
+            font-family: 'Orbitron', monospace;
+            margin-top: 10px;
+        }
+        
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* Trophy animation */
+        .trophy-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .trophy {
+            font-size: 80px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="trophy-container">
+            <span class="trophy">🏆</span>
+        </div>
+        
+        <h1>🎉 MISJA ZAKOŃCZONA!</h1>
+        <p class="subtitle">Wszystkie zagadki rozwiązane. Oto Twoja nagroda.</p>
+        
+        <div class="message-box">
+            <p>
+                <strong>Drogi Kaps,</strong><br><br>
+                Gratulacje! Udało Ci się przejść przez wszystkie 5 etapów Birthday Protocol.<br>
+                Twój umysł jest równie ostry jak Twoje umiejętności bramkarskie! 🥅<br><br>
+                Poniżej znajdziesz swoje <strong>prawdziwe nagrody</strong> - vouchery do pobrania.<br>
+                Wszystkiego najlepszego z okazji <strong>30. urodzin</strong>! 🎂
+            </p>
+        </div>
+        
+        <div class="vouchers">
+            <div class="voucher-card">
+                <span class="voucher-icon">☕</span>
+                <div class="voucher-title">Kurs Latte Art</div>
+                <div class="voucher-desc">Naucz się tworzyć prawdziwe dzieła sztuki w filiżance kawy!</div>
+                <a href="voucher_latte_art.pdf" download class="download-btn">📥 POBIERZ VOUCHER</a>
+            </div>
+            
+            <div class="voucher-card">
+                <span class="voucher-icon">🎤</span>
+                <div class="voucher-title">Lekcje Śpiewu i Emisji Głosu</div>
+                <div class="voucher-desc">Rozwiń swój talent wokalny z profesjonalnym instruktorem!</div>
+                <a href="voucher_spiew.pdf" download class="download-btn">📥 POBIERZ VOUCHER</a>
+            </div>
+        </div>
+        
+        <div class="footer-message">
+            <p>Dziękujemy za udział w Birthday Protocol!</p>
+            <p class="signature">— Beeesqp & Bractwo 🎂</p>
+        </div>
+    </div>
+    
+    <script>
+        // Confetti celebration
+        for (let i = 0; i < 80; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.cssText = `
+                    position: fixed;
+                    width: ${8 + Math.random() * 12}px;
+                    height: ${8 + Math.random() * 12}px;
+                    background: ${['#00ff41', '#00ffff', '#ffcc00', '#ff6b6b', '#54a0ff', '#ff9ff3'][Math.floor(Math.random() * 6)]};
+                    left: ${Math.random() * 100}vw;
+                    top: -20px;
+                    border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                    pointer-events: none;
+                    animation: confettiFall ${4 + Math.random() * 3}s linear forwards;
+                    opacity: ${0.7 + Math.random() * 0.3};
+                `;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 7000);
+            }, i * 80);
+        }
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes confettiFall {
+                to {
+                    transform: translateY(100vh) rotate(720deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Easter egg
+        console.log('%c🎂 CONGRATULATIONS! 🎂', 'font-size: 20px; color: #00ff41; background: #000; padding: 10px;');
+        console.log('%cYou completed The Birthday Protocol!', 'font-size: 14px; color: #00ffff;');
+    </script>
+</body>
+</html>

@@ -290,7 +290,7 @@
         <div class="video-wrapper">
             <iframe 
                 id="ytPlayer"
-                src="https://www.youtube.com/embed/GnvPHkJT0Q4?enablejsapi=1&autoplay=1" 
+                src="" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
             </iframe>
@@ -345,6 +345,9 @@
             document.getElementById('disclaimer').style.display = 'none';
             document.getElementById('videoContainer').classList.add('active');
             document.body.classList.add('video-mode');
+            
+            // Start video only after clicking OK
+            document.getElementById('ytPlayer').src = 'https://www.youtube.com/embed/GnvPHkJT0Q4?enablejsapi=1&autoplay=1';
             
             // Countdown timer
             let timeLeft = 15;

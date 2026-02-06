@@ -179,6 +179,14 @@
             border-left: 4px solid #00ffff;
             padding: 20px;
             margin: 20px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        
+        .mission-box.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         
         .mission-box h3 {
@@ -294,6 +302,14 @@
             padding: 15px 20px;
             margin: 20px 0;
             color: #ffcc00;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        
+        .warning-box.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         
         .progress-bar-container {
@@ -642,8 +658,8 @@
             { id: 1, name: "Uszkodzona Transmisja", file: "67e4e3bd.html" },
             { id: 2, name: "Ukryte w Obrazie", file: "548fc04e.html" },
             { id: 3, name: "Archeolog Kodu", file: "ce288458.html" },
-            { id: 4, name: "Warstwowe Szyfrowanie", file: "e2617ae0.html" },
-            { id: 5, name: "Ostatni Protokół", file: "983fb966.html" }
+            { id: 4, name: "Ukryte Częstotliwości", file: "e2617ae0.html" },
+            { id: 5, name: "Brotherhood API", file: "983fb966.html" }
         ];
         
         function getProgress() {
@@ -866,10 +882,29 @@
                 startBtn.textContent = `→ PRZEJDŹ DO ETAPU ${currentStage}`;
             }
             
-            // Show button
-            setTimeout(() => {
-                startBtn.classList.add('visible');
-            }, isFirstVisit ? 13000 : 500);
+            // Show button, mission-box and warning-box
+            const missionBox = document.querySelector('.mission-box');
+            const hintBox = document.getElementById('hintBox');
+            
+            if (isFirstVisit) {
+                // Show after intro animation completes
+                setTimeout(() => {
+                    missionBox.classList.add('visible');
+                }, 12000);
+                setTimeout(() => {
+                    hintBox.classList.add('visible');
+                }, 12500);
+                setTimeout(() => {
+                    startBtn.classList.add('visible');
+                }, 13000);
+            } else {
+                // Show instantly for returning visitors
+                missionBox.classList.add('visible');
+                if (!isComplete) hintBox.classList.add('visible');
+                setTimeout(() => {
+                    startBtn.classList.add('visible');
+                }, 500);
+            }
         }
         
         function goToNextStage() {

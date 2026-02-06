@@ -656,7 +656,7 @@
     <script>
         const STAGES = [
             { id: 1, name: "Uszkodzona Transmisja", file: "67e4e3bd.html" },
-            { id: 2, name: "Ukryte w Obrazie", file: "548fc04e.html" },
+            { id: 2, name: "Anomalia Danych", file: "548fc04e.html" },
             { id: 3, name: "Archeolog Kodu", file: "ce288458.html" },
             { id: 4, name: "Ukryte Częstotliwości", file: "e2617ae0.html" },
             { id: 5, name: "Brotherhood API", file: "983fb966.html" }
@@ -852,22 +852,30 @@
                 `;
             }).join('');
             
-            // Show final code if complete
+            // Show final code validator if complete
             const finalCodeSection = document.getElementById('finalCodeSection');
             if (isComplete) {
-                const finalCode = getFinalCode();
                 finalCodeSection.style.display = 'block';
                 finalCodeSection.innerHTML = `
                     <div class="final-code-box">
-                        <h3>🎁 FINALNY KOD DOSTĘPU</h3>
-                        <div class="final-code">${finalCode}</div>
-                        <p style="margin-top: 15px; color: #00aa30;">
-                            Użyj tego kodu, aby odebrać swój prezent!
+                        <h3>🔐 OSTATECZNA WERYFIKACJA</h3>
+                        <p style="color: #aaa; margin-bottom: 20px;">
+                            Wprowadź wszystkie zdobyte kody w kolejności od <span style="color:#00ffff">najmniejszego</span> do <span style="color:#00ffff">największego</span>:
                         </p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
+                            <input type="text" id="code1" class="code-input" placeholder="1" maxlength="4" style="width:70px;background:#000;border:2px solid #ffcc00;color:#ffcc00;padding:10px;text-align:center;font-family:'Orbitron',monospace;font-size:1.1em;border-radius:5px;" />
+                            <input type="text" id="code2" class="code-input" placeholder="2" maxlength="4" style="width:70px;background:#000;border:2px solid #ffcc00;color:#ffcc00;padding:10px;text-align:center;font-family:'Orbitron',monospace;font-size:1.1em;border-radius:5px;" />
+                            <input type="text" id="code3" class="code-input" placeholder="3" maxlength="4" style="width:70px;background:#000;border:2px solid #ffcc00;color:#ffcc00;padding:10px;text-align:center;font-family:'Orbitron',monospace;font-size:1.1em;border-radius:5px;" />
+                            <input type="text" id="code4" class="code-input" placeholder="4" maxlength="4" style="width:70px;background:#000;border:2px solid #ffcc00;color:#ffcc00;padding:10px;text-align:center;font-family:'Orbitron',monospace;font-size:1.1em;border-radius:5px;" />
+                            <input type="text" id="code5" class="code-input" placeholder="5" maxlength="4" style="width:70px;background:#000;border:2px solid #ffcc00;color:#ffcc00;padding:10px;text-align:center;font-family:'Orbitron',monospace;font-size:1.1em;border-radius:5px;" />
+                        </div>
+                        <div id="codeError" style="display:none;color:#ff4444;margin:10px 0;"></div>
+                        <button onclick="validateFinalCode()" style="background:linear-gradient(180deg,#332200,#1a1100);color:#ffcc00;border:2px solid #ffcc00;padding:15px 40px;font-family:'Orbitron',monospace;font-size:1em;cursor:pointer;border-radius:5px;margin-top:10px;">
+                            🎁 ODBIERZ NAGRODĘ
+                        </button>
                     </div>
                 `;
                 document.getElementById('hintBox').style.display = 'none';
-                createConfetti();
             } else {
                 finalCodeSection.style.display = 'none';
             }
@@ -1031,6 +1039,33 @@
             // Same as renderPage but without completion check animations
             const items = document.querySelectorAll('.stage-list li');
             items.forEach(item => item.classList.add('instant-show'));
+        }
+        
+        // Final code validation (sorted: 54, 110, 224, 1983, 2015)
+        function validateFinalCode() {
+            const codes = [
+                document.getElementById('code1').value.trim(),
+                document.getElementById('code2').value.trim(),
+                document.getElementById('code3').value.trim(),
+                document.getElementById('code4').value.trim(),
+                document.getElementById('code5').value.trim()
+            ];
+            const correct = ['54', '110', '224', '1983', '2015'];
+            const errorEl = document.getElementById('codeError');
+            
+            if (codes.some(c => !c)) {
+                errorEl.textContent = '❌ Wypełnij wszystkie pola!';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (codes.join(',') === correct.join(',')) {
+                errorEl.style.display = 'none';
+                window.location.href = 'reward.html';
+            } else {
+                errorEl.textContent = '❌ Nieprawidłowa sekwencja! Sprawdź kolejność.';
+                errorEl.style.display = 'block';
+            }
         }
         
         // Easter egg in console

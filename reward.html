@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 GRATULACJE!!!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 25%, #48dbfb 50%, #ff9ff3 75%, #54a0ff 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 3s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+            overflow: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .popup {
+            background: white;
+            border: 5px solid #ff0000;
+            border-radius: 20px;
+            padding: 40px 50px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: bounce 0.5s ease-out, shake 0.3s ease-in-out 0.5s;
+            position: relative;
+        }
+        
+        @keyframes bounce {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .trophy {
+            font-size: 80px;
+            animation: spin 1s ease-in-out infinite alternate;
+            display: block;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(-10deg) scale(1); }
+            100% { transform: rotate(10deg) scale(1.1); }
+        }
+        
+        h1 {
+            color: #ff0000;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 #ffcc00;
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+        
+        .congrats-text {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .prize {
+            background: linear-gradient(90deg, #ffd700, #ffec8b, #ffd700);
+            background-size: 200% 100%;
+            animation: goldShine 2s linear infinite;
+            color: #8b0000;
+            font-size: 1.8em;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 3px dashed #ff0000;
+        }
+        
+        @keyframes goldShine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .ok-btn {
+            background: linear-gradient(180deg, #00cc00 0%, #008800 100%);
+            color: white;
+            font-size: 1.5em;
+            font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+            font-weight: bold;
+            padding: 15px 60px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #006600;
+            transition: all 0.1s;
+            margin-top: 10px;
+        }
+        
+        .ok-btn:hover {
+            background: linear-gradient(180deg, #00dd00 0%, #009900 100%);
+        }
+        
+        .ok-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #006600;
+        }
+        
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .disclaimer {
+            position: fixed;
+            bottom: 10px;
+            font-size: 0.7em;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Flashing stars */
+        .star {
+            position: absolute;
+            font-size: 30px;
+            animation: starFlash 0.5s ease-in-out infinite alternate;
+        }
+        
+        .star:nth-child(1) { top: -20px; left: 20px; animation-delay: 0s; }
+        .star:nth-child(2) { top: -20px; right: 20px; animation-delay: 0.1s; }
+        .star:nth-child(3) { top: 50%; left: -30px; animation-delay: 0.2s; }
+        .star:nth-child(4) { top: 50%; right: -30px; animation-delay: 0.3s; }
+        .star:nth-child(5) { bottom: -20px; left: 30%; animation-delay: 0.4s; }
+        .star:nth-child(6) { bottom: -20px; right: 30%; animation-delay: 0.5s; }
+        
+        @keyframes starFlash {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <audio id="audio" autoplay>
+        <source src="gratulacje-uzytkowniku.mp3" type="audio/mpeg">
+    </audio>
+    
+    <div class="popup">
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        <span class="star">⭐</span>
+        
+        <span class="trophy">🏆</span>
+        
+        <h1>!!! GRATULACJE !!!</h1>
+        
+        <p class="congrats-text">
+            Drogi użytkowniku <strong>BOOOGRACZ</strong>!<br>
+            Jesteś naszym <u>1,000,000</u> odwiedzającym!!!
+        </p>
+        
+        <div class="prize">
+            🎁 WYGRAŁEŚ NAGRODĘ! 🎁
+        </div>
+        
+        <p style="color:#666;margin-bottom:15px;font-size:0.95em;">
+            Kliknij OK aby odebrać swój ekskluzywny prezent urodzinowy!
+        </p>
+        
+        <button class="ok-btn" onclick="claimPrize()">OK</button>
+    </div>
+    
+    <div class="disclaimer">* To nie jest prawdziwy scam, spokojnie 😉</div>
+    
+    <script>
+        // Confetti on load
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.cssText = `
+                    position: fixed;
+                    width: ${10 + Math.random() * 15}px;
+                    height: ${10 + Math.random() * 15}px;
+                    background: ${['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3'][Math.floor(Math.random() * 7)]};
+                    left: ${Math.random() * 100}vw;
+                    top: -20px;
+                    border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+                    pointer-events: none;
+                    animation: confettiFall ${3 + Math.random() * 3}s linear forwards;
+                `;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 6000);
+            }, i * 100);
+        }
+        
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes confettiFall {
+                to {
+                    transform: translateY(100vh) rotate(720deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        function claimPrize() {
+            // Redirect to Rick Roll (or appropriate video)
+            window.location.href = 'https://www.youtube.com/watch?v=GnvPHkJT0Q4';
+        }
+        
+        // Try to play audio (may be blocked by browser)
+        document.addEventListener('click', () => {
+            const audio = document.getElementById('audio');
+            if (audio.paused) audio.play();
+        }, { once: true });
+    </script>
+</body>
+</html>
